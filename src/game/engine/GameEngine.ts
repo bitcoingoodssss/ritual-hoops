@@ -232,6 +232,9 @@ export class GameEngine {
     
     // Ball trail
     this.buildBallTrail();
+
+    // Background music
+    this.initBGM();
   }
 
 
@@ -253,8 +256,8 @@ export class GameEngine {
     const arenaGeo = new THREE.PlaneGeometry(80, 80);
     const arenaMat = new THREE.MeshStandardMaterial({
       color: 0x080810,
-      roughness: 0.85,
-      metalness: 0.2,
+      roughness: 0.95,
+      metalness: 0.0,
     });
     const arenaFloor = new THREE.Mesh(arenaGeo, arenaMat);
     arenaFloor.rotation.x = -Math.PI / 2;
@@ -327,18 +330,36 @@ export class GameEngine {
     // Court floor - polished wood look
     const courtGeo = new THREE.PlaneGeometry(COURT_WIDTH, COURT_LENGTH);
     const courtMat = new THREE.MeshStandardMaterial({
-      color: 0xb85c3a,
-      roughness: 0.15,
-      metalness: 0.3,
+      color: 0xc4723e,
+      roughness: 0.88,
+      metalness: 0.0,
     });
     const courtFloor = new THREE.Mesh(courtGeo, courtMat);
     courtFloor.rotation.x = -Math.PI / 2;
     courtFloor.receiveShadow = true;
     this.court.add(courtFloor);
 
+    // Wood grain stripes overlay
+    const stripeCount = 18;
+    for (let i = 0; i < stripeCount; i++) {
+      const sx = -COURT_WIDTH / 2 + (i + 0.5) * (COURT_WIDTH / stripeCount);
+      const stripeGeo = new THREE.PlaneGeometry(COURT_WIDTH / stripeCount * 0.7, COURT_LENGTH);
+      const stripeMat = new THREE.MeshBasicMaterial({
+        color: i % 2 === 0 ? 0xb86840 : 0xd4844c,
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+      stripe.rotation.x = -Math.PI / 2;
+      stripe.position.set(sx, 0.002, 0);
+      this.court.add(stripe);
+    }
+
     // === RITUAL TEXT ON COURT ===
-    this.addCourtText('RITUAL', 0, 0.015, 0, 8, 1.2, '#ffffff', 0.12);
-    this.addCourtText('HOOPS', 0, 0.015, 5, 8, 0.8, '#ffffff', 0.08);
+    this.addCourtText('RITUAL', 0, 0.016, -1, 12, 1.6, '#ff8c00', 0.25);
+    this.addCourtText('HOOPS', 0, 0.016, 5.5, 7, 0.9, '#ff6b35', 0.15);
 
     // === PLAYER SIDE INDICATORS ===
     // Player's half (positive Z) - orange tint
@@ -383,7 +404,7 @@ export class GameEngine {
     this.court.add(arrow);
 
     // Court lines
-    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: 0.9 });
     
     // Boundary
     this.addCourtLine(this.court, [
@@ -440,71 +461,89 @@ export class GameEngine {
     
     this.scene.add(this.court);
     
-    // "YOUR HOOP" neon arrow indicator
+    // === CLEAR SIDE LABELS ===
     const arrowGroup = new THREE.Group();
-    
-    // Glowing arrow pointing to player's hoop (+Z direction)
-    const neonConeGeo = new THREE.ConeGeometry(0.3, 1.5, 8);
-    const neonConeMat = new THREE.MeshStandardMaterial({
-      color: 0x00ffdd,
-      emissive: 0x00ffdd,
-      emissiveIntensity: 0.8,
-      transparent: true,
-      opacity: 0.8,
-    });
-    const neonCone = new THREE.Mesh(neonConeGeo, neonConeMat);
-    neonCone.position.set(0, 0.6, 8);
-    neonCone.rotation.x = Math.PI; // Points +Z
-    arrowGroup.add(neonCone);
-    
-    // Text label "YOUR HOOP" using canvas texture
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#00ffdd';
-    ctx.font = 'bold 80px Arial, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('YOUR HOOP', 256, 80);
-    
-    const labelTexture = new THREE.CanvasTexture(canvas);
-    const labelGeo = new THREE.PlaneGeometry(4, 1);
-    const labelMat = new THREE.MeshBasicMaterial({
-      map: labelTexture,
-      transparent: true,
-      opacity: 0.7,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    });
-    const label = new THREE.Mesh(labelGeo, labelMat);
-    label.position.set(0, 0.5, 12);
-    label.rotation.x = -Math.PI / 2;
-    arrowGroup.add(label);
-    
-    // "OPPONENT" label on opponent side
-    const canvas2 = document.createElement('canvas');
-    canvas2.width = 512;
-    canvas2.height = 128;
-    const ctx2 = canvas2.getContext('2d')!;
-    ctx2.fillStyle = '#ff0066';
-    ctx2.font = 'bold 80px Arial, sans-serif';
-    ctx2.textAlign = 'center';
-    ctx2.fillText('OPPONENT', 256, 80);
-    
-    const labelTexture2 = new THREE.CanvasTexture(canvas2);
-    const labelGeo2 = new THREE.PlaneGeometry(4, 1);
-    const labelMat2 = new THREE.MeshBasicMaterial({
-      map: labelTexture2,
-      transparent: true,
-      opacity: 0.5,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    });
-    const label2 = new THREE.Mesh(labelGeo2, labelMat2);
-    label2.position.set(0, 0.5, -12);
-    label2.rotation.x = -Math.PI / 2;
-    arrowGroup.add(label2);
-    
+
+    // YOUR HOOP - large glowing label
+    const yourCanvas = document.createElement('canvas');
+    yourCanvas.width = 1024; yourCanvas.height = 256;
+    const yourCtx = yourCanvas.getContext('2d')!;
+    yourCtx.shadowColor = '#00ffdd'; yourCtx.shadowBlur = 30;
+    yourCtx.fillStyle = '#00ffdd';
+    yourCtx.font = 'bold 140px Arial, sans-serif';
+    yourCtx.textAlign = 'center'; yourCtx.textBaseline = 'middle';
+    yourCtx.fillText('YOUR HOOP', 512, 128);
+    yourCtx.fillText('YOUR HOOP', 512, 128);
+    const yourTexture = new THREE.CanvasTexture(yourCanvas);
+    const yourLabel = new THREE.Mesh(
+      new THREE.PlaneGeometry(8, 2),
+      new THREE.MeshBasicMaterial({ map: yourTexture, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false })
+    );
+    yourLabel.position.set(0, 0.03, 15); yourLabel.rotation.x = -Math.PI / 2;
+    arrowGroup.add(yourLabel);
+
+    // Arrow to YOUR HOOP
+    const yourArrC = document.createElement('canvas'); yourArrC.width = 256; yourArrC.height = 256;
+    const yourArrCtx = yourArrC.getContext('2d')!;
+    yourArrCtx.shadowColor = '#00ffdd'; yourArrCtx.shadowBlur = 20;
+    yourArrCtx.fillStyle = '#00ffdd';
+    yourArrCtx.font = 'bold 200px Arial'; yourArrCtx.textAlign = 'center'; yourArrCtx.textBaseline = 'middle';
+    yourArrCtx.fillText('\u25B2', 128, 128);
+    const yourArrTex = new THREE.CanvasTexture(yourArrC);
+    const yourArrMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.MeshBasicMaterial({ map: yourArrTex, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false })
+    );
+    yourArrMesh.position.set(0, 0.03, 13); yourArrMesh.rotation.x = -Math.PI / 2;
+    arrowGroup.add(yourArrMesh);
+
+    // OPPONENT label
+    const oppCanvas = document.createElement('canvas');
+    oppCanvas.width = 1024; oppCanvas.height = 256;
+    const oppCtx = oppCanvas.getContext('2d')!;
+    oppCtx.shadowColor = '#ff0066'; oppCtx.shadowBlur = 30;
+    oppCtx.fillStyle = '#ff0066';
+    oppCtx.font = 'bold 140px Arial, sans-serif';
+    oppCtx.textAlign = 'center'; oppCtx.textBaseline = 'middle';
+    oppCtx.fillText('OPPONENT', 512, 128);
+    oppCtx.fillText('OPPONENT', 512, 128);
+    const oppTexture = new THREE.CanvasTexture(oppCanvas);
+    const oppLabel = new THREE.Mesh(
+      new THREE.PlaneGeometry(8, 2),
+      new THREE.MeshBasicMaterial({ map: oppTexture, transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false })
+    );
+    oppLabel.position.set(0, 0.03, -15); oppLabel.rotation.x = -Math.PI / 2;
+    arrowGroup.add(oppLabel);
+
+    // Arrow to OPPONENT
+    const oppArrC = document.createElement('canvas'); oppArrC.width = 256; oppArrC.height = 256;
+    const oppArrCtx = oppArrC.getContext('2d')!;
+    oppArrCtx.shadowColor = '#ff0066'; oppArrCtx.shadowBlur = 20;
+    oppArrCtx.fillStyle = '#ff0066';
+    oppArrCtx.font = 'bold 200px Arial'; oppArrCtx.textAlign = 'center'; oppArrCtx.textBaseline = 'middle';
+    oppArrCtx.fillText('\u25BC', 128, 128);
+    const oppArrTex = new THREE.CanvasTexture(oppArrC);
+    const oppArrMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.MeshBasicMaterial({ map: oppArrTex, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })
+    );
+    oppArrMesh.position.set(0, 0.03, -13); oppArrMesh.rotation.x = -Math.PI / 2;
+    arrowGroup.add(oppArrMesh);
+
+    // Colored edge strips
+    const pStrip = new THREE.Mesh(
+      new THREE.PlaneGeometry(COURT_WIDTH, 1.5),
+      new THREE.MeshBasicMaterial({ color: 0x00ffdd, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false })
+    );
+    pStrip.rotation.x = -Math.PI / 2; pStrip.position.set(0, 0.012, COURT_LENGTH / 2 - 0.75);
+    arrowGroup.add(pStrip);
+    const oStrip = new THREE.Mesh(
+      new THREE.PlaneGeometry(COURT_WIDTH, 1.5),
+      new THREE.MeshBasicMaterial({ color: 0xff0066, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false })
+    );
+    oStrip.rotation.x = -Math.PI / 2; oStrip.position.set(0, 0.012, -COURT_LENGTH / 2 + 0.75);
+    arrowGroup.add(oStrip);
+
     this.scene.add(arrowGroup);
   }
 
@@ -617,9 +656,9 @@ export class GameEngine {
     const backboardMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.7,
-      roughness: 0.1,
-      metalness: 0.3,
+      opacity: 0.92,
+      roughness: 0.15,
+      metalness: 0.2,
     });
     const backboard = new THREE.Mesh(backboardGeo, backboardMat);
     backboard.position.set(0, 0.6, pos.z > 0 ? 0.8 : -0.8);
@@ -641,16 +680,26 @@ export class GameEngine {
     hoop.add(pole);
     
     // Rim
-    const rimGeo = new THREE.TorusGeometry(0.45, 0.02, 8, 24);
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.9, roughness: 0.1 });
+    const rimGeo = new THREE.TorusGeometry(0.45, 0.035, 12, 32);
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0xff6633, metalness: 0.85, roughness: 0.15 });
     const rim = new THREE.Mesh(rimGeo, rimMat);
     rim.position.set(0, HOOP_HEIGHT, pos.z > 0 ? 0 : 0);
     rim.rotation.x = Math.PI / 2;
     rim.castShadow = true;
     hoop.add(rim);
     
+    // Hoop glow light
+    const hoopLight = new THREE.PointLight(pos.z < 0 ? 0xff0066 : 0x00ffdd, 3, 6);
+    hoopLight.position.set(0, HOOP_HEIGHT + 0.5, 0);
+    hoop.add(hoopLight);
+
+    // Hoop glow light
+    const hoopLight = new THREE.PointLight(pos.z < 0 ? 0xff0066 : 0x00ffdd, 3, 6);
+    hoopLight.position.set(0, HOOP_HEIGHT + 0.5, 0);
+    hoop.add(hoopLight);
+
     // Net (simplified with lines)
-    const netMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+    const netMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
     for (let i = 0; i < 12; i++) {
       const angle = (i / 12) * Math.PI * 2;
       const x = Math.cos(angle) * 0.45;
@@ -919,7 +968,7 @@ export class GameEngine {
 
   private buildLights() {
     // Ambient - very dim for moody atmosphere
-    this.ambientLight = new THREE.AmbientLight(0x110022, 0.4);
+    this.ambientLight = new THREE.AmbientLight(0x222244, 0.6);
     this.scene.add(this.ambientLight);
     
     // Main overhead spotlight (bright white)

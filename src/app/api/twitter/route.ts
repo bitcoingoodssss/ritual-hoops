@@ -8,42 +8,41 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Twitter ID is required' }, { status: 400 });
   }
 
+  const cleanId = twitterId.replace('@', '').trim();
+  if (!cleanId || cleanId.length < 1) {
+    return NextResponse.json({ error: 'Invalid Twitter ID' }, { status: 400 });
+  }
+
   try {
-    const cleanId = twitterId.replace('@', '');
-    
-    // Try multiple approaches to get the avatar
-    // Method 1: Use the Twitter profile image URL pattern
-    const avatarUrl = `https://unavatar.io/twitter/${cleanId}`;
-    
-    // Verify the URL works by making a HEAD request
-    const response = await fetch(avatarUrl, { method: 'HEAD', redirect: 'follow' });
-    
-    if (response.ok) {
-      // Also try to get the actual profile pic URL for higher quality
-      const profileUrl = `https://unavatar.io/twitter/${cleanId}?size=256`;
+    // Use unavatar.io to validate - it returns 404 for non-existent Twitter accounts
+    const validateUrl = `https://unavatar.io/twitter/${cleanId}?fallback=false`;
+    const validateRes = await fetch(validateUrl, { 
+      method: 'HEAD', 
+      redirect: 'follow',
+      headers: { 'User-Agent': 'RitualHoops/1.0' }
+    });
+
+    // unavatar returns 302/200 for valid accounts, 404 for invalid
+    if (!validateRes.ok) {
       return NextResponse.json({ 
-        success: true, 
-        avatarUrl: profileUrl,
-        twitterId: cleanId 
-      });
+        error: 'Twitter account not found', 
+        valid: false 
+      }, { status: 404 });
     }
 
-    // Fallback: Use DiceBear avatar as placeholder
-    const fallbackUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${cleanId}&backgroundColor=ff6b35`;
+    // Get the avatar URL (follow redirects to get actual image)
+    const avatarUrl = `https://unavatar.io/twitter/${cleanId}?size=256`;
+    
     return NextResponse.json({ 
       success: true, 
-      avatarUrl: fallbackUrl,
-      twitterId: cleanId,
-      fallback: true 
+      valid: true,
+      avatarUrl,
+      twitterId: cleanId 
     });
   } catch {
-    const cleanId = twitterId.replace('@', '');
-    const fallbackUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${cleanId}&backgroundColor=ff6b35`;
     return NextResponse.json({ 
-      success: true, 
-      avatarUrl: fallbackUrl,
-      twitterId: cleanId,
-      fallback: true 
-    });
+      error: 'Failed to verify Twitter account', 
+      valid: false 
+    }, { status: 500 });
   }
 }

@@ -124,18 +124,22 @@ interface GameState {
 }
 
 const ALL_NFTS: NFTItem[] = [
-  { id: 'jersey-classic', name: 'Classic Jersey', type: 'jersey', rarity: 'common', price: 0.04, stats: { speed: 0, shoot: 2, defense: 0, dunk: 0 }, image: '/nft/jersey-classic.png', owned: false, equipped: false },
-  { id: 'jersey-fire', name: 'Fire Jersey', type: 'jersey', rarity: 'rare', price: 0.12, stats: { speed: 2, shoot: 3, defense: 1, dunk: 2 }, image: '/nft/jersey-fire.png', owned: false, equipped: false },
-  { id: 'jersey-neon', name: 'Neon Strike Jersey', type: 'jersey', rarity: 'epic', price: 0.25, stats: { speed: 4, shoot: 5, defense: 3, dunk: 3 }, image: '/nft/jersey-neon.png', owned: false, equipped: false },
-  { id: 'jersey-legend', name: 'Legend Jersey', type: 'jersey', rarity: 'legendary', price: 0.38, stats: { speed: 6, shoot: 8, defense: 5, dunk: 7 }, image: '/nft/jersey-legend.png', owned: false, equipped: false },
-  { id: 'shoes-basic', name: 'Basic Kicks', type: 'shoes', rarity: 'common', price: 0.05, stats: { speed: 2, shoot: 0, defense: 0, dunk: 1 }, image: '/nft/shoes-basic.png', owned: false, equipped: false },
-  { id: 'shoes-air', name: 'Air Max Pro', type: 'shoes', rarity: 'rare', price: 0.15, stats: { speed: 5, shoot: 1, defense: 1, dunk: 4 }, image: '/nft/shoes-air.png', owned: false, equipped: false },
-  { id: 'shoes-phantom', name: 'Phantom Ghost', type: 'shoes', rarity: 'epic', price: 0.28, stats: { speed: 7, shoot: 2, defense: 2, dunk: 6 }, image: '/nft/shoes-phantom.png', owned: false, equipped: false },
-  { id: 'shoes-cosmic', name: 'Cosmic Dunk', type: 'shoes', rarity: 'legendary', price: 0.40, stats: { speed: 10, shoot: 4, defense: 4, dunk: 10 }, image: '/nft/shoes-cosmic.png', owned: false, equipped: false },
-  { id: 'headband-red', name: 'Red Headband', type: 'headband', rarity: 'common', price: 0.04, stats: { speed: 0, shoot: 1, defense: 0, dunk: 0 }, image: '/nft/headband-red.png', owned: false, equipped: false },
-  { id: 'headband-gold', name: 'Gold Champion Band', type: 'headband', rarity: 'legendary', price: 0.35, stats: { speed: 2, shoot: 3, defense: 2, dunk: 2 }, image: '/nft/headband-gold.png', owned: false, equipped: false },
-  { id: 'accessory-wristband', name: 'Power Wristband', type: 'accessory', rarity: 'rare', price: 0.10, stats: { speed: 1, shoot: 2, defense: 1, dunk: 1 }, image: '/nft/wristband.png', owned: false, equipped: false },
-  { id: 'accessory-elbow', name: 'Elite Elbow Pad', type: 'accessory', rarity: 'epic', price: 0.22, stats: { speed: 0, shoot: 1, defense: 5, dunk: 2 }, image: '/nft/elbow-pad.png', owned: false, equipped: false },
+  // === JERSEYS ===
+  { id: 'jersey-lakers', name: 'Lakers #24', type: 'jersey', rarity: 'legendary', price: 0.38, stats: { speed: 5, shoot: 8, defense: 4, dunk: 7 }, image: '/nft/jersey-lakers.png', owned: false, equipped: false },
+  { id: 'jersey-bulls', name: 'Bulls #23', type: 'jersey', rarity: 'legendary', price: 0.40, stats: { speed: 7, shoot: 6, defense: 5, dunk: 9 }, image: '/nft/jersey-bulls.png', owned: false, equipped: false },
+  { id: 'jersey-warriors', name: 'Warriors #30', type: 'jersey', rarity: 'epic', price: 0.25, stats: { speed: 6, shoot: 8, defense: 2, dunk: 4 }, image: '/nft/jersey-warriors.png', owned: false, equipped: false },
+  { id: 'jersey-celtics', name: 'Celtics #33', type: 'jersey', rarity: 'rare', price: 0.12, stats: { speed: 3, shoot: 5, defense: 4, dunk: 3 }, image: '/nft/jersey-celtics.png', owned: false, equipped: false },
+  // === SHOES ===
+  { id: 'shoes-jordan1', name: 'Air Jordan 1 Retro', type: 'shoes', rarity: 'legendary', price: 0.40, stats: { speed: 8, shoot: 3, defense: 3, dunk: 10 }, image: '/nft/shoes-jordan1.png', owned: false, equipped: false },
+  { id: 'shoes-lebron', name: 'LeBron XXI', type: 'shoes', rarity: 'epic', price: 0.28, stats: { speed: 7, shoot: 2, defense: 3, dunk: 8 }, image: '/nft/shoes-lebron.png', owned: false, equipped: false },
+  { id: 'shoes-kobe', name: 'Kobe 6 Protro', type: 'shoes', rarity: 'epic', price: 0.30, stats: { speed: 9, shoot: 4, defense: 2, dunk: 7 }, image: '/nft/shoes-kobe.png', owned: false, equipped: false },
+  { id: 'shoes-kd', name: 'KD 16', type: 'shoes', rarity: 'rare', price: 0.15, stats: { speed: 5, shoot: 3, defense: 2, dunk: 5 }, image: '/nft/shoes-kd.png', owned: false, equipped: false },
+  // === HEADBANDS ===
+  { id: 'headband-lebron', name: 'LeBron Headband', type: 'headband', rarity: 'rare', price: 0.10, stats: { speed: 2, shoot: 2, defense: 1, dunk: 2 }, image: '/nft/headband-lebron.png', owned: false, equipped: false },
+  { id: 'headband-rondo', name: 'Championship Band', type: 'headband', rarity: 'legendary', price: 0.35, stats: { speed: 3, shoot: 4, defense: 3, dunk: 3 }, image: '/nft/headband-champ.png', owned: false, equipped: false },
+  // === ACCESSORIES ===
+  { id: 'accessory-wristband', name: 'Nike Pro Wristband', type: 'accessory', rarity: 'rare', price: 0.10, stats: { speed: 1, shoot: 2, defense: 2, dunk: 1 }, image: '/nft/wristband-nike.png', owned: false, equipped: false },
+  { id: 'accessory-armband', name: 'Shooter Arm Sleeve', type: 'accessory', rarity: 'epic', price: 0.22, stats: { speed: 1, shoot: 5, defense: 3, dunk: 1 }, image: '/nft/armsleeve.png', owned: false, equipped: false },
 ];
 
 const OPPONENT_NAMES = [

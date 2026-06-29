@@ -77,6 +77,11 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
       setError(t('menu.enterTwitter', lang));
       return;
     }
+    if (!walletConnected) {
+      setError(lang === 'zh' ? '请先连接钱包' : 'Please connect wallet first');
+      setShowWallet(true);
+      return;
+    }
     
     setLoading(true);
     setError('');
@@ -85,21 +90,16 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
       const res = await fetch(`/api/twitter?id=${encodeURIComponent(inputId.trim())}`);
       const data = await res.json();
       
-      if (data.avatarUrl) {
+      if (data.valid && data.avatarUrl) {
         setTwitterId(inputId.trim());
         setAvatarUrl(data.avatarUrl);
         setPlayerName(inputId.trim().replace('@', ''));
         onEnterGame();
       } else {
-        setError(t('menu.errorAvatar', lang));
+        setError(data.error || t('menu.errorAvatar', lang));
       }
     } catch {
-      // Fallback - still allow entry
-      setTwitterId(inputId.trim());
-      const fallbackUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${inputId.trim()}&backgroundColor=ff6b35`;
-      setAvatarUrl(fallbackUrl);
-      setPlayerName(inputId.trim().replace('@', ''));
-      onEnterGame();
+      setError(t('menu.errorAvatar', lang));
     }
     
     setLoading(false);

@@ -46,7 +46,7 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
 
   const handleMint = async (nftId: string, price: number) => {
     if (!walletConnected) { setShowWalletModal(true); return; }
-    if (useGameStore.getState().ritualBalance < price) { alert('Insufficient RTUAL balance!'); return; }
+    if (useGameStore.getState().ritualBalance < price) { alert(lang === 'zh' ? 'RTUAL余额不足！' : 'Insufficient RTUAL balance!'); return; }
     setMinting(nftId);
     await new Promise(resolve => setTimeout(resolve, 2000));
     const nft = ALL_NFTS.find(n => n.id === nftId);
@@ -154,30 +154,31 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
                     className={`rounded-xl border overflow-hidden transition-all hover:scale-[1.02] ${rc.bg} ${rc.border} ${rc.glow} ${equipped ? 'ring-2 ring-orange-400' : ''}`}>
                     {/* Large Icon Header */}
                     <div className={`h-36 flex flex-col items-center justify-center ${rc.headerBg} relative`}>
-                      <span className="text-7xl mb-1 drop-shadow-lg">{getNFTIcon(nft.type)}</span>
-                      <span className="absolute top-2 right-2 text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-black/40 text-white/80">{nft.rarity}</span>
+                      <span className="text-7xl mb-1 drop-shadow-lg">{getNFTIcon(nft.type, nft.rarity)}</span>
+                      <span className="absolute top-2 right-2 text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-black/40 text-white/80">{getRarityIcon(nft.rarity)} {nft.rarity}</span>
                       <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/40 text-white/60">{getNFTLabel(nft.type)}</span>
+                      <span className="absolute bottom-2 text-[11px] font-black text-white/90 drop-shadow">{nft.name}</span>
                     </div>
 
                     {/* Content */}
                     <div className="p-4">
-                      <h4 className="text-base font-black text-white mb-1">{nft.name}</h4>
-                      <p className="text-xs text-gray-500 mb-3">On Ritual Chain</p>
+                      <h4 className="text-base font-black text-white mb-0.5">{nft.name}</h4>
+                      <p className="text-xs text-gray-500 mb-3">{getNFTLabel(nft.type)} {t('shop.onRitual', lang)}</p>
 
                       {/* Stats */}
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 mb-4">
-                        <StatBlock label="Speed" value={nft.stats.speed} color="green" />
-                        <StatBlock label="Shoot" value={nft.stats.shoot} color="yellow" />
-                        <StatBlock label="Defense" value={nft.stats.defense} color="blue" />
-                        <StatBlock label="Dunk" value={nft.stats.dunk} color="red" />
+                        <StatBlock label={t('controls.move', lang)} value={nft.stats.speed} color="green" />
+                        <StatBlock label={t('controls.shoot', lang).split('(')[0].trim()} value={nft.stats.shoot} color="yellow" />
+                        <StatBlock label={t('controls.steal', lang)} value={nft.stats.defense} color="blue" />
+                        <StatBlock label={t('controls.dunk', lang).split('(')[0].trim()} value={nft.stats.dunk} color="red" />
                       </div>
 
                       {/* Action */}
                       {owned ? (
                         equipped ? (
-                          <button onClick={() => unequipNFT(nft.type)} className="w-full py-2.5 bg-gray-700/50 text-gray-300 text-sm font-bold rounded-lg hover:bg-gray-600/50 transition-all">✓ Equipped</button>
+                          <button onClick={() => unequipNFT(nft.type)} className="w-full py-2.5 bg-gray-700/50 text-gray-300 text-sm font-bold rounded-lg hover:bg-gray-600/50 transition-all">{t('shop.equipped', lang)}</button>
                         ) : (
-                          <button onClick={() => equipNFT(nft)} className="w-full py-2.5 bg-orange-500/80 text-white text-sm font-bold rounded-lg hover:bg-orange-500 transition-all">Equip</button>
+                          <button onClick={() => equipNFT(nft)} className="w-full py-2.5 bg-orange-500/80 text-white text-sm font-bold rounded-lg hover:bg-orange-500 transition-all">{t('shop.equip', lang)}</button>
                         )
                       ) : (
                         <button onClick={() => handleMint(nft.id, nft.price)} disabled={minting === nft.id}
@@ -185,9 +186,9 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
                           {minting === nft.id ? (
                             <span className="flex items-center justify-center gap-1.5">
                               <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                              Minting...
+                              {t('shop.minting', lang)}
                             </span>
-                          ) : `Mint for ${nft.price} RTUAL`}
+                          ) : `${t('shop.mintFor', lang)} ${nft.price} RTUAL`}
                         </button>
                       )}
                     </div>
