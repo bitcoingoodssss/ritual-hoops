@@ -131,6 +131,10 @@ export class GameEngine {
   // Court floor reflection
   floorMaterial!: THREE.MeshStandardMaterial;
 
+  // Audio
+  private bgmAudio: HTMLAudioElement | null = null;
+  private bgmVolume: number = 0.15;
+
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     // Scene
     this.scene = new THREE.Scene();
@@ -689,14 +693,9 @@ export class GameEngine {
     hoop.add(rim);
     
     // Hoop glow light
-    const hoopLight = new THREE.PointLight(pos.z < 0 ? 0xff0066 : 0x00ffdd, 3, 6);
-    hoopLight.position.set(0, HOOP_HEIGHT + 0.5, 0);
-    hoop.add(hoopLight);
-
-    // Hoop glow light
-    const hoopLight = new THREE.PointLight(pos.z < 0 ? 0xff0066 : 0x00ffdd, 3, 6);
-    hoopLight.position.set(0, HOOP_HEIGHT + 0.5, 0);
-    hoop.add(hoopLight);
+    const hoopGlow = new THREE.PointLight(pos.z < 0 ? 0xff0066 : 0x00ffdd, 3, 6);
+    hoopGlow.position.set(0, HOOP_HEIGHT + 0.5, 0);
+    hoop.add(hoopGlow);
 
     // Net (simplified with lines)
     const netMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
@@ -1029,6 +1028,15 @@ export class GameEngine {
     
     this.particleSystem = new THREE.Points(geo, mat);
     this.scene.add(this.particleSystem);
+  }
+
+  private initBGM() {
+    try {
+      this.bgmAudio = new Audio('/bgm-nba.wav');
+      this.bgmAudio.loop = true;
+      this.bgmAudio.volume = this.bgmVolume;
+      this.bgmAudio.play().catch(() => {});
+    } catch {}
   }
 
   private buildBallTrail() {

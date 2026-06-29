@@ -217,9 +217,9 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
                   <div key={record.id} className={`rounded-xl p-4 border ${record.result === 'win' ? 'border-green-500/30 bg-green-900/10' : 'border-red-500/30 bg-red-900/10'}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
-                        <span className={`text-xs font-black px-2 py-0.5 rounded ${record.result === 'win' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{record.result.toUpperCase()}</span>
+                        <span className={`text-xs font-black px-2 py-0.5 rounded ${record.result === 'win' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{record.result === 'win' ? t('shop.win', lang) : t('shop.loss', lang)}</span>
                         <span className="text-sm font-bold text-white">vs {record.opponentName}</span>
-                        <span className="text-xs text-gray-500">Round {record.round + 1}</span>
+                        <span className="text-xs text-gray-500">{t('gameOver.roundDone', lang, { r: record.round + 1 })}</span>
                       </div>
                       <span className="text-xs text-gray-500">{record.date}</span>
                     </div>
@@ -230,8 +230,8 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
                         <span className="text-2xl font-black text-gray-400">{record.opponentScore}</span>
                       </div>
                       <div className="flex gap-4 text-xs text-gray-400">
-                        <span>PTS: {record.playerPoints}</span>
-                        <span>STL: {record.steals}</span>
+                        <span>{t('shop.pts', lang)}: {record.playerPoints}</span>
+                        <span>{t('shop.stl', lang)}: {record.steals}</span>
                         <span className="text-yellow-400">+{record.rtualEarned} RTUAL</span>
                       </div>
                     </div>
