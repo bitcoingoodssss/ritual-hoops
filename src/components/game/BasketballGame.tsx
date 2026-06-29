@@ -14,6 +14,12 @@ export default function BasketballGame() {
     phase,
     playerScore,
     opponentScore,
+    lastAction,
+    combo,
+    hasBall,
+    walletConnected,
+    playerStats,
+    currentRound,
     setPhase,
     setScore,
     setHasBall,
@@ -26,7 +32,9 @@ export default function BasketballGame() {
     setShowParticles,
     addPlayerPoints,
     addPlayerStat,
-    currentRound,
+    totalRounds,
+    addGameRecord,
+    setRitualBalance,
     getPlayerBonusStats,
   } = useGameStore();
 
@@ -53,6 +61,7 @@ export default function BasketballGame() {
         scorer === 'player' ? engine.playerScore : useGameStore.getState().playerScore,
         scorer === 'opponent' ? engine.opponentScore : useGameStore.getState().opponentScore,
       );
+      setHasBall(scorer === 'player');
       
       if (scorer === 'player') {
         addPlayerPoints(points);
@@ -69,14 +78,37 @@ export default function BasketballGame() {
     engine.onSteal = () => {
       addPlayerStat('steals');
       setLastAction('STEAL!');
+      setHasBall(true);
     };
 
     engine.onAction = (action) => {
       setLastAction(action);
+      // Sync ball possession
+      if (action === 'steal') setHasBall(true);
+      if (action === 'opponent_steal') setHasBall(false);
     };
 
     engine.onGameOver = (winner) => {
-      setPhase(winner === 'player' ? 'gameOver' : 'gameOver');
+      setPhase('gameOver');
+      // Save game history if wallet connected
+      if (useGameStore.getState().walletConnected) {
+        const s = engine.getScores();
+        const isWin = s.player > s.opponent;
+        const earned = isWin ? 0.05 : 0.01;
+        addGameRecord({
+          id: Date.now().toString(),
+          date: new Date().toLocaleString(),
+          opponentName: useGameStore.getState().currentOpponent?.name || 'Unknown',
+          playerScore: s.player,
+          opponentScore: s.opponent,
+          result: isWin ? 'win' : 'loss',
+          round: useGameStore.getState().currentRound,
+          playerPoints: useGameStore.getState().playerStats.points,
+          steals: useGameStore.getState().playerStats.steals,
+          rtualEarned: earned,
+        });
+        setRitualBalance(useGameStore.getState().ritualBalance + earned);
+      }
     };
 
     // Start
@@ -106,9 +138,11 @@ export default function BasketballGame() {
         if (engine.hasBall === 'player') {
           engine.hasBall = 'opponent';
           engine.ball.owner = 'opponent';
+          setHasBall(false);
         } else {
           engine.hasBall = 'player';
           engine.ball.owner = 'player';
+          setHasBall(true);
         }
         setLastAction('SHOT CLOCK VIOLATION');
       }
@@ -129,7 +163,7 @@ export default function BasketballGame() {
       window.removeEventListener('resize', handleResize);
       clearInterval(timerInterval);
     };
-  }, [avatarUrl, currentOpponent]);
+  }, [avatarUrl, currentOpponent, setScore, setHasBall, setCombo, setLastAction, setShowParticles, addPlayerPoints, addPlayerStat, setPhase, addGameRecord, setRitualBalance]);
 
   useEffect(() => {
     const cleanup = initEngine();
@@ -186,9 +220,9 @@ export default function BasketballGame() {
           gameTimer={gameTimerDisplay}
           currentRound={currentRound}
           opponentName={currentOpponent?.name || ''}
-          lastAction={useGameStore.getState().lastAction}
-          combo={useGameStore.getState().combo}
-          hasBall={useGameStore.getState().hasBall}
+          lastAction={lastAction}
+          combo={combo}
+          hasBall={hasBall}
           getPlayerBonusStats={getPlayerBonusStats}
         />
       )}
@@ -203,7 +237,7 @@ export default function BasketballGame() {
           opponentScore={opponentScore}
           opponentName={currentOpponent?.name || ''}
           currentRound={currentRound}
-          totalRounds={useGameStore.getState().totalRounds}
+          totalRounds={totalRounds}
           isWin={playerScore > opponentScore}
           onNextRound={handleNextRound}
           onRestart={handleRestart}
@@ -242,19 +276,10 @@ function GameHUD({
   hasBall: boolean;
   getPlayerBonusStats: () => { speed: number; shoot: number; defense: number; dunk: number };
 }) {
-  const [showAction, setShowAction] = useState(false);
-  const prevActionRef = useRef('');
-  const actionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Track action changes outside of effect to avoid lint warning
-  if (lastAction !== prevActionRef.current) {
-    prevActionRef.current = lastAction;
-    if (actionTimerRef.current) clearTimeout(actionTimerRef.current);
-    setShowAction(true);
-    actionTimerRef.current = setTimeout(() => setShowAction(false), 1500);
-  }
-
   const bonus = getPlayerBonusStats();
+
+  // Use key to force re-render animation on each new action
+  const actionKey = lastAction || 'none';
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -307,9 +332,9 @@ function GameHUD({
       </div>
 
       {/* Action Popup */}
-      {showAction && lastAction && (
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 pointer-events-none">
-          <div className="text-5xl font-black text-white animate-bounce drop-shadow-2xl"
+      {lastAction && (
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 pointer-events-none" key={actionKey}>
+          <div className="action-pop text-5xl font-black text-white drop-shadow-2xl"
                style={{ textShadow: '0 0 30px rgba(255,107,53,0.8), 0 0 60px rgba(255,107,53,0.4)' }}>
             {lastAction.toUpperCase().replace(/_/g, ' ')}
           </div>

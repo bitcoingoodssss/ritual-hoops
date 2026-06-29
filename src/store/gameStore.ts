@@ -30,6 +30,19 @@ export interface PlayerStats {
   blocks: number;
 }
 
+export interface GameRecord {
+  id: string;
+  date: string;
+  opponentName: string;
+  playerScore: number;
+  opponentScore: number;
+  result: 'win' | 'loss';
+  round: number;
+ playerPoints: number;
+  steals: number;
+  rtualEarned: number;
+}
+
 export type GamePhase = 'menu' | 'playing' | 'paused' | 'scored' | 'gameOver' | 'tournamentWin' | 'nftShop';
 
 export type GameAction = 'idle' | 'dribbling' | 'shooting' | 'dunking' | 'stealing' | 'defending' | 'celebrating' | 'fouled';
@@ -70,6 +83,9 @@ interface GameState {
   showParticles: boolean;
   combo: number;
   lastAction: string;
+
+  // History
+  gameHistory: GameRecord[];
   
   // Actions
   setTwitterId: (id: string) => void;
@@ -99,21 +115,23 @@ interface GameState {
   resetGame: () => void;
   initTournament: () => void;
   getPlayerBonusStats: () => { speed: number; shoot: number; defense: number; dunk: number };
+  addGameRecord: (record: GameRecord) => void;
+  clearHistory: () => void;
 }
 
 const ALL_NFTS: NFTItem[] = [
-  { id: 'jersey-classic', name: 'Classic Jersey', type: 'jersey', rarity: 'common', price: 10, stats: { speed: 0, shoot: 2, defense: 0, dunk: 0 }, image: '/nft/jersey-classic.png', owned: false, equipped: false },
-  { id: 'jersey-fire', name: 'Fire Jersey', type: 'jersey', rarity: 'rare', price: 25, stats: { speed: 2, shoot: 3, defense: 1, dunk: 2 }, image: '/nft/jersey-fire.png', owned: false, equipped: false },
-  { id: 'jersey-neon', name: 'Neon Strike Jersey', type: 'jersey', rarity: 'epic', price: 50, stats: { speed: 4, shoot: 5, defense: 3, dunk: 3 }, image: '/nft/jersey-neon.png', owned: false, equipped: false },
-  { id: 'jersey-legend', name: 'Legend Jersey', type: 'jersey', rarity: 'legendary', price: 100, stats: { speed: 6, shoot: 8, defense: 5, dunk: 7 }, image: '/nft/jersey-legend.png', owned: false, equipped: false },
-  { id: 'shoes-basic', name: 'Basic Kicks', type: 'shoes', rarity: 'common', price: 10, stats: { speed: 2, shoot: 0, defense: 0, dunk: 1 }, image: '/nft/shoes-basic.png', owned: false, equipped: false },
-  { id: 'shoes-air', name: 'Air Max Pro', type: 'shoes', rarity: 'rare', price: 30, stats: { speed: 5, shoot: 1, defense: 1, dunk: 4 }, image: '/nft/shoes-air.png', owned: false, equipped: false },
-  { id: 'shoes-phantom', name: 'Phantom Ghost', type: 'shoes', rarity: 'epic', price: 60, stats: { speed: 7, shoot: 2, defense: 2, dunk: 6 }, image: '/nft/shoes-phantom.png', owned: false, equipped: false },
-  { id: 'shoes-cosmic', name: 'Cosmic Dunk', type: 'shoes', rarity: 'legendary', price: 120, stats: { speed: 10, shoot: 4, defense: 4, dunk: 10 }, image: '/nft/shoes-cosmic.png', owned: false, equipped: false },
-  { id: 'headband-red', name: 'Red Headband', type: 'headband', rarity: 'common', price: 5, stats: { speed: 0, shoot: 1, defense: 0, dunk: 0 }, image: '/nft/headband-red.png', owned: false, equipped: false },
-  { id: 'headband-gold', name: 'Gold Champion Band', type: 'headband', rarity: 'legendary', price: 80, stats: { speed: 2, shoot: 3, defense: 2, dunk: 2 }, image: '/nft/headband-gold.png', owned: false, equipped: false },
-  { id: 'accessory-wristband', name: 'Power Wristband', type: 'accessory', rarity: 'rare', price: 20, stats: { speed: 1, shoot: 2, defense: 1, dunk: 1 }, image: '/nft/wristband.png', owned: false, equipped: false },
-  { id: 'accessory-elbow', name: 'Elite Elbow Pad', type: 'accessory', rarity: 'epic', price: 45, stats: { speed: 0, shoot: 1, defense: 5, dunk: 2 }, image: '/nft/elbow-pad.png', owned: false, equipped: false },
+  { id: 'jersey-classic', name: 'Classic Jersey', type: 'jersey', rarity: 'common', price: 0.04, stats: { speed: 0, shoot: 2, defense: 0, dunk: 0 }, image: '/nft/jersey-classic.png', owned: false, equipped: false },
+  { id: 'jersey-fire', name: 'Fire Jersey', type: 'jersey', rarity: 'rare', price: 0.12, stats: { speed: 2, shoot: 3, defense: 1, dunk: 2 }, image: '/nft/jersey-fire.png', owned: false, equipped: false },
+  { id: 'jersey-neon', name: 'Neon Strike Jersey', type: 'jersey', rarity: 'epic', price: 0.25, stats: { speed: 4, shoot: 5, defense: 3, dunk: 3 }, image: '/nft/jersey-neon.png', owned: false, equipped: false },
+  { id: 'jersey-legend', name: 'Legend Jersey', type: 'jersey', rarity: 'legendary', price: 0.38, stats: { speed: 6, shoot: 8, defense: 5, dunk: 7 }, image: '/nft/jersey-legend.png', owned: false, equipped: false },
+  { id: 'shoes-basic', name: 'Basic Kicks', type: 'shoes', rarity: 'common', price: 0.05, stats: { speed: 2, shoot: 0, defense: 0, dunk: 1 }, image: '/nft/shoes-basic.png', owned: false, equipped: false },
+  { id: 'shoes-air', name: 'Air Max Pro', type: 'shoes', rarity: 'rare', price: 0.15, stats: { speed: 5, shoot: 1, defense: 1, dunk: 4 }, image: '/nft/shoes-air.png', owned: false, equipped: false },
+  { id: 'shoes-phantom', name: 'Phantom Ghost', type: 'shoes', rarity: 'epic', price: 0.28, stats: { speed: 7, shoot: 2, defense: 2, dunk: 6 }, image: '/nft/shoes-phantom.png', owned: false, equipped: false },
+  { id: 'shoes-cosmic', name: 'Cosmic Dunk', type: 'shoes', rarity: 'legendary', price: 0.40, stats: { speed: 10, shoot: 4, defense: 4, dunk: 10 }, image: '/nft/shoes-cosmic.png', owned: false, equipped: false },
+  { id: 'headband-red', name: 'Red Headband', type: 'headband', rarity: 'common', price: 0.04, stats: { speed: 0, shoot: 1, defense: 0, dunk: 0 }, image: '/nft/headband-red.png', owned: false, equipped: false },
+  { id: 'headband-gold', name: 'Gold Champion Band', type: 'headband', rarity: 'legendary', price: 0.35, stats: { speed: 2, shoot: 3, defense: 2, dunk: 2 }, image: '/nft/headband-gold.png', owned: false, equipped: false },
+  { id: 'accessory-wristband', name: 'Power Wristband', type: 'accessory', rarity: 'rare', price: 0.10, stats: { speed: 1, shoot: 2, defense: 1, dunk: 1 }, image: '/nft/wristband.png', owned: false, equipped: false },
+  { id: 'accessory-elbow', name: 'Elite Elbow Pad', type: 'accessory', rarity: 'epic', price: 0.22, stats: { speed: 0, shoot: 1, defense: 5, dunk: 2 }, image: '/nft/elbow-pad.png', owned: false, equipped: false },
 ];
 
 const OPPONENT_NAMES = [
@@ -171,6 +189,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   showParticles: false,
   combo: 0,
   lastAction: '',
+  gameHistory: [],
 
   setTwitterId: (id) => set({ twitterId: id }),
   setAvatarUrl: (url) => set({ avatarUrl: url }),
@@ -278,6 +297,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
     return bonus;
   },
+
+  addGameRecord: (record) => set((state) => ({ gameHistory: [record, ...state.gameHistory] })),
+  clearHistory: () => set({ gameHistory: [] }),
 }));
 
 export { ALL_NFTS };

@@ -155,3 +155,30 @@ canvas {
 .glow-purple {
   box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.1);
 }
+
+/* Action popup animation */
+.action-pop {
+  animation: actionPop 1.5s ease-out forwards;
+}
+
+@keyframes actionPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(20px);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.2) translateY(-5px);
+  }
+  30% {
+    transform: scale(1) translateY(0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-30px);
+  }
+}

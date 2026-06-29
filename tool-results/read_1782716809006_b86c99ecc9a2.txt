@@ -1,0 +1,1050 @@
+   720→
+   721→    const leftArmGroup = createArm(-1);
+   722→    leftArmGroup.position.set(-0.28, 1.55, 0);
+   723→    leftArmGroup.rotation.z = 0.2;
+   724→    player.add(leftArmGroup);
+   725→
+   726→    const rightArmGroup = createArm(1);
+   727→    rightArmGroup.position.set(0.28, 1.55, 0);
+   728→    rightArmGroup.rotation.z = -0.2;
+   729→    player.add(rightArmGroup);
+   730→
+   731→    // === LEGS (upper + lower) ===
+   732→    const upperLegLen = 0.40;
+   733→    const lowerLegLen = 0.42;
+   734→
+   735→    function createLeg(side: number): THREE.Group {
+   736→      const legGroup = new THREE.Group();
+   737→      legGroup.name = side < 0 ? 'leftLeg' : 'rightLeg';
+   738→
+   739→      // Upper leg (shorts-colored)
+   740→      const upperGeo = new THREE.CylinderGeometry(0.085, 0.075, upperLegLen, armSeg);
+   741→      const upper = new THREE.Mesh(upperGeo, shortsMat);
+   742→      upper.position.y = -upperLegLen / 2;
+   743→      upper.castShadow = true;
+   744→      legGroup.add(upper);
+   745→
+   746→      // Knee sphere
+   747→      const kneeGeo = new THREE.SphereGeometry(0.065, 8, 6);
+   748→      const knee = new THREE.Mesh(kneeGeo, headMat);
+   749→      knee.position.y = -upperLegLen;
+   750→      legGroup.add(knee);
+   751→
+   752→      // Lower leg (skin)
+   753→      const lowerGeo = new THREE.CylinderGeometry(0.065, 0.058, lowerLegLen, armSeg);
+   754→      const lower = new THREE.Mesh(lowerGeo, headMat);
+   755→      lower.position.y = -upperLegLen - lowerLegLen / 2;
+   756→      lower.castShadow = true;
+   757→      legGroup.add(lower);
+   758→
+   759→      // Ankle sphere
+   760→      const ankleGeo = new THREE.SphereGeometry(0.05, 8, 6);
+   761→      const ankle = new THREE.Mesh(ankleGeo, headMat);
+   762→      ankle.position.y = -upperLegLen - lowerLegLen;
+   763→      legGroup.add(ankle);
+   764→
+   765→      return legGroup;
+   766→    }
+   767→
+   768→    const leftLegGroup = createLeg(-1);
+   769→    leftLegGroup.position.set(-0.10, 0.82, 0);
+   770→    player.add(leftLegGroup);
+   771→
+   772→    const rightLegGroup = createLeg(1);
+   773→    rightLegGroup.position.set(0.10, 0.82, 0);
+   774→    player.add(rightLegGroup);
+   775→
+   776→    // === SHOES ===
+   777→    const shoeMat = new THREE.MeshStandardMaterial({ color: shoeColor, roughness: 0.3, metalness: 0.4 });
+   778→
+   779→    function createShoe(side: number): THREE.Group {
+   780→      const shoeGroup = new THREE.Group();
+   781→      shoeGroup.name = side < 0 ? 'leftShoe' : 'rightShoe';
+   782→
+   783→      // Sole
+   784→      const soleGeo = new THREE.BoxGeometry(0.14, 0.06, 0.26);
+   785→      const soleMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5, metalness: 0.1 });
+   786→      const sole = new THREE.Mesh(soleGeo, soleMat);
+   787→      sole.position.y = 0.03;
+   788→      shoeGroup.add(sole);
+   789→
+   790→      // Upper
+   791→      const upperGeo = new THREE.BoxGeometry(0.13, 0.10, 0.24);
+   792→      const upper = new THREE.Mesh(upperGeo, shoeMat);
+   793→      upper.position.y = 0.09;
+   794→      upper.castShadow = true;
+   795→      shoeGroup.add(upper);
+   796→
+   797→      // Toe cap (hemisphere-like)
+   798→      const toeGeo = new THREE.SphereGeometry(0.065, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+   799→      const toe = new THREE.Mesh(toeGeo, shoeMat);
+   800→      toe.rotation.x = Math.PI / 2;
+   801→      toe.position.set(0, 0.09, 0.12);
+   802→      shoeGroup.add(toe);
+   803→
+   804→      return shoeGroup;
+   805→    }
+   806→
+   807→    const leftShoe = createShoe(-1);
+   808→    leftShoe.position.set(-0.10, 0, 0.02);
+   809→    player.add(leftShoe);
+   810→
+   811→    const rightShoe = createShoe(1);
+   812→    rightShoe.position.set(0.10, 0, 0.02);
+   813→    player.add(rightShoe);
+   814→
+   815→    // Jersey number on chest
+   816→    const numGeo = new THREE.PlaneGeometry(0.18, 0.22);
+   817→    const numMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
+   818→    const num = new THREE.Mesh(numGeo, numMat);
+   819→    num.position.set(0, 1.35, 0.185);
+   820→    num.name = 'jerseyNum';
+   821→    player.add(num);
+   822→
+   823→    // Jersey number on back
+   824→    const numBack = new THREE.Mesh(numGeo.clone(), numMat.clone());
+   825→    numBack.position.set(0, 1.35, -0.185);
+   826→    numBack.rotation.y = Math.PI;
+   827→    player.add(numBack);
+   828→
+   829→    return player;
+   830→  }
+   831→
+   832→  private buildBall(): THREE.Mesh {
+   833→    const ballGeo = new THREE.SphereGeometry(BALL_RADIUS, 16, 16);
+   834→    const ballMat = new THREE.MeshStandardMaterial({
+   835→      color: 0xff8c00,
+   836→      roughness: 0.6,
+   837→      metalness: 0.1,
+   838→      bumpScale: 0.005,
+   839→    });
+   840→    
+   841→    // Add ball lines
+   842→    const ball = new THREE.Mesh(ballGeo, ballMat);
+   843→    
+   844→    // Seam lines
+   845→    const seamMat = new THREE.LineBasicMaterial({ color: 0x333333 });
+   846→    const seamPoints1: number[] = [];
+   847→    for (let i = 0; i <= 32; i++) {
+   848→      const angle = (i / 32) * Math.PI * 2;
+   849→      seamPoints1.push(0, Math.cos(angle) * BALL_RADIUS, Math.sin(angle) * BALL_RADIUS);
+   850→    }
+   851→    const seamGeo1 = new THREE.BufferGeometry();
+   852→    seamGeo1.setAttribute('position', new THREE.Float32BufferAttribute(seamPoints1, 3));
+   853→    ball.add(new THREE.Line(seamGeo1, seamMat));
+   854→    
+   855→    return ball;
+   856→  }
+   857→
+   858→  private buildLights() {
+   859→    this.ambientLight = new THREE.AmbientLight(0x334466, 0.6);
+   860→    this.scene.add(this.ambientLight);
+   861→    
+   862→    // Main spotlight from above
+   863→    const mainLight = new THREE.SpotLight(0xffffff, 100, 60, Math.PI / 4, 0.5, 1);
+   864→    mainLight.position.set(0, 20, 0);
+   865→    mainLight.castShadow = true;
+   866→    mainLight.shadow.mapSize.width = 2048;
+   867→    mainLight.shadow.mapSize.height = 2048;
+   868→    mainLight.shadow.camera.near = 1;
+   869→    mainLight.shadow.camera.far = 40;
+   870→    this.scene.add(mainLight);
+   871→    this.spotLights.push(mainLight);
+   872→    
+   873→    // Colored accent lights
+   874→    const colors = [0xff6b35, 0x2ec4b6, 0xf72585, 0x4cc9f0];
+   875→    const positions = [
+   876→      [-15, 12, -15], [15, 12, -15], [-15, 12, 15], [15, 12, 15]
+   877→    ];
+   878→    
+   879→    colors.forEach((color, i) => {
+   880→      const light = new THREE.SpotLight(color, 30, 50, Math.PI / 3, 0.6, 1.5);
+   881→      light.position.set(...positions[i]);
+   882→      light.target.position.set(0, 0, 0);
+   883→      this.scene.add(light);
+   884→      this.scene.add(light.target);
+   885→      this.spotLights.push(light);
+   886→    });
+   887→    
+   888→    // Rim lights at court edges
+   889→    const rimLight1 = new THREE.PointLight(0xff6b35, 5, 30);
+   890→    rimLight1.position.set(0, 2, COURT_LENGTH / 2);
+   891→    this.scene.add(rimLight1);
+   892→    this.spotLights.push(rimLight1 as unknown as THREE.SpotLight);
+   893→    
+   894→    const rimLight2 = new THREE.PointLight(0x2ec4b6, 5, 30);
+   895→    rimLight2.position.set(0, 2, -COURT_LENGTH / 2);
+   896→    this.scene.add(rimLight2);
+   897→    this.spotLights.push(rimLight2 as unknown as THREE.SpotLight);
+   898→  }
+   899→
+   900→  private buildParticleSystem() {
+   901→    const count = 200;
+   902→    const geo = new THREE.BufferGeometry();
+   903→    const positions = new Float32Array(count * 3);
+   904→    const colors = new Float32Array(count * 3);
+   905→    const sizes = new Float32Array(count);
+   906→    
+   907→    for (let i = 0; i < count; i++) {
+   908→      positions[i * 3] = 0;
+   909→      positions[i * 3 + 1] = -100;
+   910→      positions[i * 3 + 2] = 0;
+   911→      colors[i * 3] = 1;
+   912→      colors[i * 3 + 1] = 0.5;
+   913→      colors[i * 3 + 2] = 0;
+   914→      sizes[i] = 0.2;
+   915→    }
+   916→    
+   917→    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+   918→    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+   919→    geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+   920→    
+   921→    const mat = new THREE.PointsMaterial({
+   922→      size: 0.3,
+   923→      vertexColors: true,
+   924→      transparent: true,
+   925→      opacity: 1,
+   926→      blending: THREE.AdditiveBlending,
+   927→      depthWrite: false,
+   928→    });
+   929→    
+   930→    this.particleSystem = new THREE.Points(geo, mat);
+   931→    this.scene.add(this.particleSystem);
+   932→  }
+   933→
+   934→  private buildBallTrail() {
+   935→    this.ballTrailGeometry = new THREE.BufferGeometry();
+   936→    this.ballTrailGeometry.setAttribute('position', new THREE.BufferAttribute(this.ballTrailPositions, 3));
+   937→    const mat = new THREE.LineBasicMaterial({
+   938→      color: 0xff8c00,
+   939→      transparent: true,
+   940→      opacity: 0.4,
+   941→      blending: THREE.AdditiveBlending,
+   942→    });
+   943→    this.ballTrailLine = new THREE.Line(this.ballTrailGeometry, mat);
+   944→    this.scene.add(this.ballTrailLine);
+   945→  }
+   946→
+   947→  // ============== AVATAR ==============
+   948→  setPlayerAvatar(url: string) {
+   949→    const img = new Image();
+   950→    img.crossOrigin = 'anonymous';
+   951→    img.onload = () => {
+   952→      const canvas = document.createElement('canvas');
+   953→      canvas.width = img.naturalWidth || img.width;
+   954→      canvas.height = img.naturalHeight || img.height;
+   955→      const ctx = canvas.getContext('2d')!;
+   956→      ctx.drawImage(img, 0, 0);
+   957→      const texture = new THREE.CanvasTexture(canvas);
+   958→      texture.colorSpace = THREE.SRGBColorSpace;
+   959→      this.playerAvatarTexture = texture;
+   960→      const face = this.playerMesh.getObjectByName('face') as THREE.Mesh;
+   961→      if (face) {
+   962→        const mat = face.material as THREE.MeshBasicMaterial;
+   963→        mat.map = texture;
+   964→        mat.transparent = true;
+   965→        mat.opacity = 1;
+   966→        mat.side = THREE.DoubleSide;
+   967→        mat.needsUpdate = true;
+   968→      }
+   969→    };
+   970→    img.onerror = () => {
+   971→      const face = this.playerMesh.getObjectByName('face') as THREE.Mesh;
+   972→      if (face) {
+   973→        const mat = face.material as THREE.MeshBasicMaterial;
+   974→        mat.color.set(0xff6b35);
+   975→        mat.opacity = 0.8;
+   976→      }
+   977→    };
+   978→    img.src = url;
+   979→  }
+   980→
+   981→  setOpponentAvatar(url: string) {
+   982→    const img = new Image();
+   983→    img.crossOrigin = 'anonymous';
+   984→    img.onload = () => {
+   985→      const canvas = document.createElement('canvas');
+   986→      canvas.width = img.naturalWidth || img.width;
+   987→      canvas.height = img.naturalHeight || img.height;
+   988→      const ctx = canvas.getContext('2d')!;
+   989→      ctx.drawImage(img, 0, 0);
+   990→      const texture = new THREE.CanvasTexture(canvas);
+   991→      texture.colorSpace = THREE.SRGBColorSpace;
+   992→      this.opponentAvatarTexture = texture;
+   993→      const face = this.opponentMesh.getObjectByName('face') as THREE.Mesh;
+   994→      if (face) {
+   995→        const mat = face.material as THREE.MeshBasicMaterial;
+   996→        mat.map = texture;
+   997→        mat.transparent = true;
+   998→        mat.opacity = 1;
+   999→        mat.side = THREE.DoubleSide;
+  1000→        mat.needsUpdate = true;
+  1001→      }
+  1002→    };
+  1003→    img.onerror = () => {
+  1004→      const face = this.opponentMesh.getObjectByName('face') as THREE.Mesh;
+  1005→      if (face) {
+  1006→        const mat = face.material as THREE.MeshBasicMaterial;
+  1007→        mat.color.set(0x2ec4b6);
+  1008→        mat.opacity = 0.8;
+  1009→      }
+  1010→    };
+  1011→    img.src = url;
+  1012→  }
+  1013→
+  1014→  // ============== INPUT ==============
+  1015→  private setupInput() {
+  1016→    const onKeyDown = (e: KeyboardEvent) => {
+  1017→      this.keys.add(e.code);
+  1018→      if (e.code === 'Space') {
+  1019→        e.preventDefault();
+  1020→        if (!this.player.isJumping && !this.player.isShooting && !this.player.isDunking) {
+  1021→          this.player.isJumping = true;
+  1022→          this.player.jumpVelocity = JUMP_FORCE;
+  1023→        }
+  1024→      }
+  1025→      if (e.code === 'KeyE') {
+  1026→        e.preventDefault();
+  1027→        if (this.hasBall === 'player' && !this.player.isShooting && !this.player.isDunking) {
+  1028→          this.startPlayerShot();
+  1029→        }
+  1030→      }
+  1031→      if (e.code === 'KeyQ') {
+  1032→        e.preventDefault();
+  1033→        this.trySteal('player');
+  1034→      }
+  1035→      if (e.code === 'KeyF') {
+  1036→        e.preventDefault();
+  1037→        this.tryDunk();
+  1038→      }
+  1039→      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+  1040→        this.keys.add('Sprint');
+  1041→      }
+  1042→    };
+  1043→    
+  1044→    const onKeyUp = (e: KeyboardEvent) => {
+  1045→      this.keys.delete(e.code);
+  1046→      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+  1047→        this.keys.delete('Sprint');
+  1048→      }
+  1049→      if (e.code === 'KeyE' && this.player.isShooting) {
+  1050→        this.releasePlayerShot();
+  1051→      }
+  1052→    };
+  1053→    
+  1054→    window.addEventListener('keydown', onKeyDown);
+  1055→    window.addEventListener('keyup', onKeyUp);
+  1056→    
+  1057→    // Store cleanup reference
+  1058→    (this as unknown as Record<string, () => void>)._cleanupInput = () => {
+  1059→      window.removeEventListener('keydown', onKeyDown);
+  1060→      window.removeEventListener('keyup', onKeyUp);
+  1061→    };
+  1062→  }
+  1063→
+  1064→  // ============== SHOOTING ==============
+  1065→  private startPlayerShot() {
+  1066→    this.player.isShooting = true;
+  1067→    this.shootPower = SHOOT_POWER_MIN;
+  1068→    this.isShootingHold = true;
+  1069→    this.onAction?.('aiming');
+  1070→  }
+  1071→
+  1072→  private releasePlayerShot() {
+  1073→    if (!this.player.isShooting) return;
+  1074→    this.isShootingHold = false;
+  1075→    this.player.isShooting = false;
+  1076→    
+  1077→    // Calculate direction to opponent's hoop
+  1078→    const targetPos = this.hoopLeft.position.clone();
+  1079→    const playerPos = this.player.position.clone();
+  1080→    playerPos.y += PLAYER_HEIGHT * 0.9;
+  1081→    
+  1082→    const direction = targetPos.clone().sub(playerPos).normalize();
+  1083→    const distance = playerPos.distanceTo(targetPos);
+  1084→    
+  1085→    // Check if it's a three-pointer
+  1086→    const distFromHoop = Math.sqrt(
+  1087→      Math.pow(this.player.position.x - targetPos.x, 2) +
+  1088→      Math.pow(this.player.position.z - targetPos.z, 2)
+  1089→    );
+  1090→    const isThreePointer = distFromHoop > THREE_POINT_LINE;
+  1091→    
+  1092→    // Launch ball
+  1093→    const power = this.shootPower;
+  1094→    this.ball.velocity.set(
+  1095→      direction.x * power * 0.7,
+  1096→      power * 0.8 + distance * 0.15,
+  1097→      direction.z * power * 0.7
+  1098→    );
+  1099→    this.ball.position.copy(playerPos);
+  1100→    this.ball.isAirborne = true;
+  1101→    this.ball.owner = null;
+  1102→    this.hasBall = 'none' as unknown as 'player' | 'opponent';
+  1103→    
+  1104→    this.onAction?.(isThreePointer ? 'three_point_shot' : 'shot');
+  1105→  }
+  1106→
+  1107→  private tryDunk() {
+  1108→    if (this.hasBall !== 'player' || this.player.isDunking || this.player.isShooting) return;
+  1109→    
+  1110→    const hoopPos = this.hoopLeft.position;
+  1111→    const dx = Math.abs(this.player.position.x - hoopPos.x);
+  1112→    const dz = Math.abs(this.player.position.z - hoopPos.z);
+  1113→    
+  1114→    if (dz < 5 && dx < 3) {
+  1115→      this.player.isDunking = true;
+  1116→      this.player.isJumping = true;
+  1117→      this.player.jumpVelocity = JUMP_FORCE * 1.3;
+  1118→      this.onAction?.('dunk');
+  1119→    }
+  1120→  }
+  1121→
+  1122→  // ============== STEALING ==============
+  1123→  private trySteal(by: 'player' | 'opponent') {
+  1124→    if (this.stealCooldown > 0) return;
+  1125→    
+  1126→    if (by === 'player' && this.hasBall === 'opponent') {
+  1127→      const dist = this.player.position.distanceTo(this.opponent.position);
+  1128→      if (dist < STEAL_RANGE) {
+  1129→        if (Math.random() < 0.35) {
+  1130→          this.hasBall = 'player';
+  1131→          this.ball.owner = 'player';
+  1132→          this.stealCooldown = STEAL_COOLDOWN;
+  1133→          this.onSteal?.();
+  1134→          this.onAction?.('steal');
+  1135→          this.spawnParticles(this.opponent.position, 0x00ff88, 10);
+  1136→        }
+  1137→      }
+  1138→    }
+  1139→  }
+  1140→
+  1141→  // ============== AI ==============
+  1142→  private updateOpponentAI(dt: number) {
+  1143→    this.opponentThinkTimer -= dt;
+  1144→    
+  1145→    if (this.opponentThinkTimer <= 0) {
+  1146→      this.opponentThinkTimer = 0.5 + Math.random() * 1.0;
+  1147→      
+  1148→      if (this.hasBall === 'opponent') {
+  1149→        // Offensive AI
+  1150→        const hoopPos = this.hoopRight.position;
+  1151→        const distToHoop = this.opponent.position.distanceTo(hoopPos);
+  1152→        
+  1153→        if (distToHoop < 6) {
+  1154→          // Close enough to shoot
+  1155→          if (Math.random() < 0.4) {
+  1156→            this.opponentShoot();
+  1157→            return;
+  1158→          }
+  1159→          if (distToHoop < 3 && Math.random() < 0.25) {
+  1160→            this.opponentDunk();
+  1161→            return;
+  1162→          }
+  1163→        }
+  1164→        // Move towards hoop
+  1165→        this.opponentTarget.set(
+  1166→          hoopPos.x + (Math.random() - 0.5) * 4,
+  1167→          0,
+  1168→          hoopPos.z - 5 + Math.random() * 2
+  1169→        );
+  1170→      } else {
+  1171→        // Defensive AI - try to get ball or block
+  1172→        if (this.hasBall === 'player') {
+  1173→          // Follow player
+  1174→          this.opponentTarget.copy(this.player.position);
+  1175→          this.opponentTarget.x += (Math.random() - 0.5) * 2;
+  1176→          this.opponentTarget.z += (Math.random() - 0.5) * 2;
+  1177→          
+  1178→          // Try to steal
+  1179→          const dist = this.opponent.position.distanceTo(this.player.position);
+  1180→          if (dist < STEAL_RANGE && Math.random() < 0.08) {
+  1181→            if (Math.random() < 0.25) {
+  1182→              this.hasBall = 'opponent';
+  1183→              this.ball.owner = 'opponent';
+  1184→              this.onAction?.('opponent_steal');
+  1185→            }
+  1186→          }
+  1187→        } else {
+  1188→          // Ball is loose, go for it
+  1189→          this.opponentTarget.copy(this.ball.position);
+  1190→          this.opponentTarget.y = 0;
+  1191→        }
+  1192→      }
+  1193→    }
+  1194→    
+  1195→    // Move towards target
+  1196→    const dir = new THREE.Vector3()
+  1197→      .subVectors(this.opponentTarget, this.opponent.position)
+  1198→      .normalize();
+  1199→    
+  1200→    const speed = MOVE_SPEED * 0.7;
+  1201→    this.opponent.position.x += dir.x * speed * dt;
+  1202→    this.opponent.position.z += dir.z * speed * dt;
+  1203→    
+  1204→    // Court bounds
+  1205→    this.opponent.position.x = THREE.MathUtils.clamp(this.opponent.position.x, -COURT_WIDTH / 2 + 1, COURT_WIDTH / 2 - 1);
+  1206→    this.opponent.position.z = THREE.MathUtils.clamp(this.opponent.position.z, -COURT_LENGTH / 2 + 1, COURT_LENGTH / 2 - 1);
+  1207→    
+  1208→    // Face movement direction
+  1209→    if (dir.length() > 0.1) {
+  1210→      this.opponent.rotation = Math.atan2(dir.x, dir.z);
+  1211→    }
+  1212→  }
+  1213→
+  1214→  private opponentShoot() {
+  1215→    if (this.hasBall !== 'opponent') return;
+  1216→    
+  1217→    const targetPos = this.hoopRight.position.clone();
+  1218→    const oppPos = this.opponent.position.clone();
+  1219→    oppPos.y += PLAYER_HEIGHT * 0.9;
+  1220→    
+  1221→    const direction = targetPos.clone().sub(oppPos).normalize();
+  1222→    const distance = oppPos.distanceTo(targetPos);
+  1223→    const power = 10 + Math.random() * 6;
+  1224→    
+  1225→    this.ball.velocity.set(
+  1226→      direction.x * power * 0.7,
+  1227→      power * 0.8 + distance * 0.15,
+  1228→      direction.z * power * 0.7
+  1229→    );
+  1230→    this.ball.position.copy(oppPos);
+  1231→    this.ball.isAirborne = true;
+  1232→    this.ball.owner = null;
+  1233→    this.hasBall = 'none' as unknown as 'player' | 'opponent';
+  1234→    this.opponentAction = 'shooting';
+  1235→    this.onAction?.('opponent_shot');
+  1236→  }
+  1237→
+  1238→  private opponentDunk() {
+  1239→    if (this.hasBall !== 'opponent') return;
+  1240→    
+  1241→    const hoopPos = this.hoopRight.position;
+  1242→    this.opponent.position.x = hoopPos.x;
+  1243→    this.opponent.position.z = hoopPos.z - 1;
+  1244→    this.opponent.isDunking = true;
+  1245→    this.opponent.isJumping = true;
+  1246→    this.opponent.jumpVelocity = JUMP_FORCE * 1.2;
+  1247→    this.onAction?.('opponent_dunk');
+  1248→  }
+  1249→
+  1250→  // ============== PHYSICS ==============
+  1251→  private updatePhysics(dt: number) {
+  1252→    // Player movement
+  1253→    let moveX = 0, moveZ = 0;
+  1254→    if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) moveX = -1;
+  1255→    if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) moveX = 1;
+  1256→    if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) moveZ = -1;
+  1257→    if (this.keys.has('KeyS') || this.keys.has('ArrowDown')) moveZ = 1;
+  1258→    
+  1259→    if (moveX !== 0 || moveZ !== 0) {
+  1260→      const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
+  1261→      moveX /= len;
+  1262→      moveZ /= len;
+  1263→      
+  1264→      const speed = MOVE_SPEED * (this.keys.has('Sprint') ? SPRINT_MULTIPLIER : 1);
+  1265→      this.player.position.x += moveX * speed * dt;
+  1266→      this.player.position.z += moveZ * speed * dt;
+  1267→      
+  1268→      // Face movement direction
+  1269→      this.player.rotation = Math.atan2(moveX, moveZ);
+  1270→      
+  1271→      // Dribble animation
+  1272→      this.dribblePhase += dt * 10;
+  1273→    }
+  1274→    
+  1275→    // Court bounds for player
+  1276→    this.player.position.x = THREE.MathUtils.clamp(this.player.position.x, -COURT_WIDTH / 2 + 1, COURT_WIDTH / 2 - 1);
+  1277→    this.player.position.z = THREE.MathUtils.clamp(this.player.position.z, -COURT_LENGTH / 2 + 1, COURT_LENGTH / 2 - 1);
+  1278→    
+  1279→    // Jump physics - Player
+  1280→    if (this.player.isJumping) {
+  1281→      this.player.position.y += this.player.jumpVelocity * dt;
+  1282→      this.player.jumpVelocity += GRAVITY * dt;
+  1283→      if (this.player.position.y <= 0) {
+  1284→        this.player.position.y = 0;
+  1285→        this.player.isJumping = false;
+  1286→        this.player.jumpVelocity = 0;
+  1287→        
+  1288→        if (this.player.isDunking) {
+  1289→          this.player.isDunking = false;
+  1290→          this.checkDunkScore('player');
+  1291→        }
+  1292→      }
+  1293→    }
+  1294→    
+  1295→    // Jump physics - Opponent
+  1296→    if (this.opponent.isJumping) {
+  1297→      this.opponent.position.y += this.opponent.jumpVelocity * dt;
+  1298→      this.opponent.jumpVelocity += GRAVITY * dt;
+  1299→      if (this.opponent.position.y <= 0) {
+  1300→        this.opponent.position.y = 0;
+  1301→        this.opponent.isJumping = false;
+  1302→        this.opponent.jumpVelocity = 0;
+  1303→        
+  1304→        if (this.opponent.isDunking) {
+  1305→          this.opponent.isDunking = false;
+  1306→          this.checkDunkScore('opponent');
+  1307→        }
+  1308→      }
+  1309→    }
+  1310→    
+  1311→    // Shot power charge
+  1312→    if (this.isShootingHold) {
+  1313→      this.shootPower = Math.min(SHOOT_POWER_MAX, this.shootPower + dt * 20);
+  1314→    }
+  1315→    
+  1316→    // Ball physics
+  1317→    if (this.ball.isAirborne) {
+  1318→      this.ball.velocity.y += GRAVITY * dt;
+  1319→      this.ball.position.add(this.ball.velocity.clone().multiplyScalar(dt));
+  1320→      this.ball.rotation.x += dt * 5;
+  1321→      this.ball.rotation.z += dt * 3;
+  1322→      
+  1323→      // Check hoop collisions
+  1324→      this.checkHoopCollision();
+  1325→      
+  1326→      // Ground bounce
+  1327→      if (this.ball.position.y < BALL_RADIUS) {
+  1328→        this.ball.position.y = BALL_RADIUS;
+  1329→        this.ball.velocity.y = Math.abs(this.ball.velocity.y) * 0.5;
+  1330→        this.ball.velocity.x *= 0.8;
+  1331→        this.ball.velocity.z *= 0.8;
+  1332→        
+  1333→        // If ball is slow enough and on ground, it's a rebound
+  1334→        if (this.ball.velocity.length() < 1) {
+  1335→          this.ball.isAirborne = false;
+  1336→          // Who picks it up?
+  1337→          const distToPlayer = this.ball.position.distanceTo(this.player.position);
+  1338→          const distToOpponent = this.ball.position.distanceTo(this.opponent.position);
+  1339→          if (distToPlayer < distToOpponent) {
+  1340→            this.hasBall = 'player';
+  1341→            this.ball.owner = 'player';
+  1342→          } else {
+  1343→            this.hasBall = 'opponent';
+  1344→            this.ball.owner = 'opponent';
+  1345→          }
+  1346→        }
+  1347→      }
+  1348→      
+  1349→      // Court bounds for ball
+  1350→      if (Math.abs(this.ball.position.x) > COURT_WIDTH / 2 + 2) {
+  1351→        this.ball.velocity.x *= -0.5;
+  1352→        this.ball.position.x = THREE.MathUtils.clamp(this.ball.position.x, -COURT_WIDTH / 2 + 1, COURT_WIDTH / 2 - 1);
+  1353→      }
+  1354→      if (Math.abs(this.ball.position.z) > COURT_LENGTH / 2 + 2) {
+  1355→        this.ball.velocity.z *= -0.5;
+  1356→        this.ball.position.z = THREE.MathUtils.clamp(this.ball.position.z, -COURT_LENGTH / 2 + 1, COURT_LENGTH / 2 - 1);
+  1357→      }
+  1358→    } else {
+  1359→      // Ball follows owner
+  1360→      if (this.ball.owner === 'player') {
+  1361→        const dribbleY = 0.8 + Math.abs(Math.sin(this.dribblePhase * 2)) * 0.5;
+  1362→        this.ball.position.set(
+  1363→          this.player.position.x + Math.sin(this.player.rotation) * 0.5,
+  1364→          dribbleY,
+  1365→          this.player.position.z + Math.cos(this.player.rotation) * 0.5
+  1366→        );
+  1367→      } else if (this.ball.owner === 'opponent') {
+  1368→        const oppDribble = 0.8 + Math.abs(Math.sin(this.clock.elapsedTime * 8)) * 0.5;
+  1369→        this.ball.position.set(
+  1370→          this.opponent.position.x + Math.sin(this.opponent.rotation) * 0.5,
+  1371→          oppDribble,
+  1372→          this.opponent.position.z + Math.cos(this.opponent.rotation) * 0.5
+  1373→        );
+  1374→      }
+  1375→    }
+  1376→    
+  1377→    // Cooldowns
+  1378→    if (this.stealCooldown > 0) this.stealCooldown -= dt;
+  1379→    if (this.scoreCooldown > 0) this.scoreCooldown -= dt;
+  1380→    
+  1381→    // Player-Opponent collision
+  1382→    const pDist = this.player.position.distanceTo(this.opponent.position);
+  1383→    if (pDist < PLAYER_RADIUS * 2.2) {
+  1384→      const pushDir = new THREE.Vector3()
+  1385→        .subVectors(this.player.position, this.opponent.position)
+  1386→        .normalize();
+  1387→      const overlap = (PLAYER_RADIUS * 2.2 - pDist) / 2;
+  1388→      this.player.position.add(pushDir.clone().multiplyScalar(overlap));
+  1389→      this.opponent.position.sub(pushDir.clone().multiplyScalar(overlap));
+  1390→    }
+  1391→  }
+  1392→
+  1393→  private checkHoopCollision() {
+  1394→    // Check if ball passes through player's target hoop (opponent's hoop, hoopLeft)
+  1395→    const hL = this.hoopLeft;
+  1396→    const dx = this.ball.position.x - hL.position.x;
+  1397→    const dz = this.ball.position.z - hL.position.z;
+  1398→    const distXZ = Math.sqrt(dx * dx + dz * dz);
+  1399→    
+  1400→    if (distXZ < hL.rimRadius * 0.8 && 
+  1401→        this.ball.position.y < hL.position.y + 0.3 &&
+  1402→        this.ball.position.y > hL.position.y - 0.5 &&
+  1403→        this.ball.velocity.y < 0) {
+  1404→      // Score for player!
+  1405→      const distFromHoop = Math.sqrt(
+  1406→        Math.pow(this.player.position.x - hL.position.x, 2) +
+  1407→        Math.pow(this.player.position.z - hL.position.z, 2)
+  1408→      );
+  1409→      const isThree = distFromHoop > THREE_POINT_LINE;
+  1410→      const points = isThree ? 3 : 2;
+  1411→      this.playerScore += points;
+  1412→      this.hasBall = 'opponent';
+  1413→      this.ball.owner = 'opponent';
+  1414→      this.ball.isAirborne = false;
+  1415→      this.scoreCooldown = 2;
+  1416→      this.spawnParticles(hL.position, 0xff6b35, 30);
+  1417→      this.onScore?.('player', points, isThree ? 'three' : 'normal');
+  1418→      this.onAction?.(isThree ? 'three_pointer_scored' : 'scored');
+  1419→      
+  1420→      // Check game over
+  1421→      if (this.playerScore >= GAME_SCORE_LIMIT) {
+  1422→        this.isRunning = false;
+  1423→        this.onGameOver?.('player');
+  1424→      }
+  1425→      return;
+  1426→    }
+  1427→    
+  1428→    // Check opponent's target hoop (player's hoop, hoopRight)
+  1429→    const hR = this.hoopRight;
+  1430→    const dx2 = this.ball.position.x - hR.position.x;
+  1431→    const dz2 = this.ball.position.z - hR.position.z;
+  1432→    const distXZ2 = Math.sqrt(dx2 * dx2 + dz2 * dz2);
+  1433→    
+  1434→    if (distXZ2 < hR.rimRadius * 0.8 && 
+  1435→        this.ball.position.y < hR.position.y + 0.3 &&
+  1436→        this.ball.position.y > hR.position.y - 0.5 &&
+  1437→        this.ball.velocity.y < 0) {
+  1438→      // Score for opponent
+  1439→      this.opponentScore += 2;
+  1440→      this.hasBall = 'player';
+  1441→      this.ball.owner = 'player';
+  1442→      this.ball.isAirborne = false;
+  1443→      this.scoreCooldown = 2;
+  1444→      this.spawnParticles(hR.position, 0x2ec4b6, 30);
+  1445→      this.onScore?.('opponent', 2, 'normal');
+  1446→      this.onAction?.('opponent_scored');
+  1447→      
+  1448→      if (this.opponentScore >= GAME_SCORE_LIMIT) {
+  1449→        this.isRunning = false;
+  1450→        this.onGameOver?.('opponent');
+  1451→      }
+  1452→    }
+  1453→  }
+  1454→
+  1455→  private checkDunkScore(dunker: 'player' | 'opponent') {
+  1456→    if (dunker === 'player') {
+  1457→      const hoopPos = this.hoopLeft.position;
+  1458→      const dist = Math.sqrt(
+  1459→        Math.pow(this.player.position.x - hoopPos.x, 2) +
+  1460→        Math.pow(this.player.position.z - hoopPos.z, 2)
+  1461→      );
+  1462→      if (dist < 3) {
+  1463→        this.playerScore += 2;
+  1464→        this.hasBall = 'opponent';
+  1465→        this.ball.owner = 'opponent';
+  1466→        this.scoreCooldown = 2;
+  1467→        this.spawnParticles(hoopPos, 0xff4444, 50);
+  1468→        this.onScore?.('player', 2, 'dunk');
+  1469→        this.onAction?.('dunk_scored');
+  1470→        
+  1471→        // Camera shake
+  1472→        this.cameraShake(0.5, 0.3);
+  1473→        
+  1474→        if (this.playerScore >= GAME_SCORE_LIMIT) {
+  1475→          this.isRunning = false;
+  1476→          this.onGameOver?.('player');
+  1477→        }
+  1478→      }
+  1479→    } else {
+  1480→      const hoopPos = this.hoopRight.position;
+  1481→      const dist = Math.sqrt(
+  1482→        Math.pow(this.opponent.position.x - hoopPos.x, 2) +
+  1483→        Math.pow(this.opponent.position.z - hoopPos.z, 2)
+  1484→      );
+  1485→      if (dist < 3) {
+  1486→        this.opponentScore += 2;
+  1487→        this.hasBall = 'player';
+  1488→        this.ball.owner = 'player';
+  1489→        this.scoreCooldown = 2;
+  1490→        this.spawnParticles(hoopPos, 0x2ec4b6, 40);
+  1491→        this.onScore?.('opponent', 2, 'dunk');
+  1492→        this.onAction?.('opponent_dunk_scored');
+  1493→        
+  1494→        this.cameraShake(0.3, 0.2);
+  1495→        
+  1496→        if (this.opponentScore >= GAME_SCORE_LIMIT) {
+  1497→          this.isRunning = false;
+  1498→          this.onGameOver?.('opponent');
+  1499→        }
+  1500→      }
+  1501→    }
+  1502→  }
+  1503→
+  1504→  // ============== PARTICLES ==============
+  1505→  private spawnParticles(position: THREE.Vector3, color: number, count: number) {
+  1506→    if (!this.particleSystem) return;
+  1507→    
+  1508→    const positions = this.particleSystem.geometry.attributes.position as THREE.BufferAttribute;
+  1509→    const colors = this.particleSystem.geometry.attributes.color as THREE.BufferAttribute;
+  1510→    
+  1511→    for (let i = 0; i < count && i < this.particles.length; i++) {
+  1512→      this.particles[i] = {
+  1513→        position: position.clone(),
+  1514→        velocity: new THREE.Vector3(
+  1515→          (Math.random() - 0.5) * 8,
+  1516→          Math.random() * 6 + 2,
+  1517→          (Math.random() - 0.5) * 8
+  1518→        ),
+  1519→        life: 1.0,
+  1520→        maxLife: 0.8 + Math.random() * 0.5,
+  1521→        color: new THREE.Color(color).offsetHSL(Math.random() * 0.1, 0, 0),
+  1522→      };
+  1523→    }
+  1524→  }
+  1525→
+  1526→  private updateParticles(dt: number) {
+  1527→    if (!this.particleSystem) return;
+  1528→    
+  1529→    const positions = this.particleSystem.geometry.attributes.position as THREE.BufferAttribute;
+  1530→    const colors = this.particleSystem.geometry.attributes.color as THREE.BufferAttribute;
+  1531→    
+  1532→    for (let i = 0; i < this.particles.length; i++) {
+  1533→      const p = this.particles[i];
+  1534→      if (p.life <= 0) {
+  1535→        positions.setXYZ(i, 0, -100, 0);
+  1536→        continue;
+  1537→      }
+  1538→      
+  1539→      p.position.add(p.velocity.clone().multiplyScalar(dt));
+  1540→      p.velocity.y += GRAVITY * 0.5 * dt;
+  1541→      p.life -= dt / p.maxLife;
+  1542→      
+  1543→      positions.setXYZ(i, p.position.x, p.position.y, p.position.z);
+  1544→      colors.setXYZ(i, p.color.r * p.life, p.color.g * p.life, p.color.b * p.life);
+  1545→    }
+  1546→    
+  1547→    positions.needsUpdate = true;
+  1548→    colors.needsUpdate = true;
+  1549→  }
+  1550→
+  1551→  // ============== CAMERA ==============
+  1552→  private cameraShake(intensity: number, duration: number) {
+  1553→    const startTime = this.clock.elapsedTime;
+  1554→    const shake = () => {
+  1555→      const elapsed = this.clock.elapsedTime - startTime;
+  1556→      if (elapsed > duration) return;
+  1557→      const decay = 1 - (elapsed / duration);
+  1558→      this.camera.position.x += (Math.random() - 0.5) * intensity * decay;
+  1559→      this.camera.position.y += (Math.random() - 0.5) * intensity * decay * 0.5;
+  1560→      requestAnimationFrame(shake);
+  1561→    };
+  1562→    shake();
+  1563→  }
+  1564→
+  1565→  private updateCamera() {
+  1566→    // Camera follows the action - centered between players
+  1567→    const midX = (this.player.position.x + this.opponent.position.x) / 2;
+  1568→    const midZ = (this.player.position.z + this.opponent.position.z) / 2;
+  1569→    
+  1570→    // If ball is in the air, look at ball
+  1571→    let lookTarget: THREE.Vector3;
+  1572→    if (this.ball.isAirborne) {
+  1573→      lookTarget = this.ball.position.clone();
+  1574→    } else {
+  1575→      lookTarget = new THREE.Vector3(midX, 1.5, midZ);
+  1576→    }
+  1577→    
+  1578→    // Smooth camera movement
+  1579→    const targetCamPos = new THREE.Vector3(
+  1580→      midX * 0.3,
+  1581→      10 + Math.abs(this.player.position.z - this.opponent.position.z) * 0.15,
+  1582→      midZ + 16
+  1583→    );
+  1584→    
+  1585→    this.camera.position.lerp(targetCamPos, 0.03);
+  1586→    
+  1587→    const currentLook = new THREE.Vector3();
+  1588→    this.camera.getWorldDirection(currentLook);
+  1589→    this.camera.lookAt(lookTarget);
+  1590→  }
+  1591→
+  1592→  // ============== ANIMATIONS ==============
+  1593→  private updateAnimations(dt: number) {
+  1594→    // Player running animation
+  1595→    if (this.keys.has('KeyA') || this.keys.has('KeyD') || this.keys.has('KeyW') || this.keys.has('KeyS') ||
+  1596→        this.keys.has('ArrowLeft') || this.keys.has('ArrowRight') || this.keys.has('ArrowUp') || this.keys.has('ArrowDown')) {
+  1597→      this.player.animTimer += dt * 8;
+  1598→      const swing = Math.sin(this.player.animTimer) * 0.4;
+  1599→      const leftArm = this.playerMesh.getObjectByName('leftArm');
+  1600→      const rightArm = this.playerMesh.getObjectByName('rightArm');
+  1601→      const leftLeg = this.playerMesh.getObjectByName('leftLeg');
+  1602→      const rightLeg = this.playerMesh.getObjectByName('rightLeg');
+  1603→      if (leftArm) leftArm.rotation.x = swing;
+  1604→      if (rightArm) rightArm.rotation.x = -swing;
+  1605→      if (leftLeg) leftLeg.rotation.x = -swing * 0.6;
+  1606→      if (rightLeg) rightLeg.rotation.x = swing * 0.6;
+  1607→    } else {
+  1608→      // Reset to idle
+  1609→      const leftArm = this.playerMesh.getObjectByName('leftArm');
+  1610→      const rightArm = this.playerMesh.getObjectByName('rightArm');
+  1611→      const leftLeg = this.playerMesh.getObjectByName('leftLeg');
+  1612→      const rightLeg = this.playerMesh.getObjectByName('rightLeg');
+  1613→      if (leftArm) leftArm.rotation.x *= 0.9;
+  1614→      if (rightArm) rightArm.rotation.x *= 0.9;
+  1615→      if (leftLeg) leftLeg.rotation.x *= 0.9;
+  1616→      if (rightLeg) rightLeg.rotation.x *= 0.9;
+  1617→    }
+  1618→    
+  1619→    // Shooting animation
+  1620→    if (this.player.isShooting) {
+  1621→      const rightArm = this.playerMesh.getObjectByName('rightArm');
+  1622→      if (rightArm) rightArm.rotation.x = -Math.PI * 0.8;
+  1623→    }
+  1624→    
+  1625→    // Dunk animation
+  1626→    if (this.player.isDunking && this.player.isJumping) {
+  1627→      const rightArm = this.playerMesh.getObjectByName('rightArm');
+  1628→      if (rightArm) {
+  1629→        rightArm.rotation.x = -Math.PI * 0.95;
+  1630→        rightArm.rotation.z = -0.5;
+  1631→      }
+  1632→    }
+  1633→    
+  1634→    // Opponent running animation
+  1635→    this.opponent.animTimer += dt * 6;
+  1636→    const oppSwing = Math.sin(this.opponent.animTimer) * 0.3;
+  1637→    const oppLeftArm = this.opponentMesh.getObjectByName('leftArm');
+  1638→    const oppRightArm = this.opponentMesh.getObjectByName('rightArm');
+  1639→    const oppLeftLeg = this.opponentMesh.getObjectByName('leftLeg');
+  1640→    const oppRightLeg = this.opponentMesh.getObjectByName('rightLeg');
+  1641→    if (oppLeftArm) oppLeftArm.rotation.x = oppSwing;
+  1642→    if (oppRightArm) oppRightArm.rotation.x = -oppSwing;
+  1643→    if (oppLeftLeg) oppLeftLeg.rotation.x = -oppSwing * 0.6;
+  1644→    if (oppRightLeg) oppRightLeg.rotation.x = oppSwing * 0.6;
+  1645→    
+  1646→    // Update mesh positions
+  1647→    this.playerMesh.position.copy(this.player.position);
+  1648→    this.playerMesh.rotation.y = this.player.rotation;
+  1649→    
+  1650→    this.opponentMesh.position.copy(this.opponent.position);
+  1651→    this.opponentMesh.rotation.y = this.opponent.rotation;
+  1652→    
+  1653→    // Ball mesh
+  1654→    this.ballMesh.position.copy(this.ball.position);
+  1655→    this.ballMesh.rotation.copy(this.ball.rotation);
+  1656→    
+  1657→    // Update ball trail
+  1658→    this.updateBallTrail();
+  1659→  }
+  1660→
+  1661→  private updateBallTrail() {
+  1662→    if (!this.ballTrailGeometry) return;
+  1663→    
+  1664→    const i = this.ballTrailIndex % 60;
+  1665→    this.ballTrailPositions[i * 3] = this.ball.position.x;
+  1666→    this.ballTrailPositions[i * 3 + 1] = this.ball.position.y;
+  1667→    this.ballTrailPositions[i * 3 + 2] = this.ball.position.z;
+  1668→    this.ballTrailIndex++;
+  1669→    
+  1670→    this.ballTrailGeometry.attributes.position.needsUpdate = true;
+  1671→  }
+  1672→
+  1673→  // ============== GAME LOOP ==============
+  1674→  update() {
+  1675→    if (!this.isRunning) return;
+  1676→    
+  1677→    const dt = Math.min(this.clock.getDelta(), 0.05);
+  1678→    
+  1679→    // Update game logic
+  1680→    this.updatePhysics(dt);
+  1681→    this.updateOpponentAI(dt);
+  1682→    this.updateAnimations(dt);
+  1683→    this.updateParticles(dt);
+  1684→    this.updateCamera();
+  1685→    
+  1686→    // Dynamic lighting
+  1687→    const time = this.clock.elapsedTime;
+  1688→    if (this.spotLights.length > 2) {
+  1689→      this.spotLights[1].intensity = 30 + Math.sin(time * 2) * 5;
+  1690→      this.spotLights[2].intensity = 30 + Math.sin(time * 2 + 1) * 5;
+  1691→      this.spotLights[3].intensity = 30 + Math.sin(time * 2 + 2) * 5;
+  1692→      this.spotLights[4].intensity = 30 + Math.sin(time * 2 + 3) * 5;
+  1693→    }
+  1694→    
+  1695→    // Render
+  1696→    this.renderer.render(this.scene, this.camera);
+  1697→  }
+  1698→
+  1699→  // ============== LIFECYCLE ==============
+  1700→  start() {
+  1701→    this.isRunning = true;
+  1702→    this.clock.start();
+  1703→    this.gameLoop();
+  1704→  }
+  1705→
+  1706→  stop() {
+  1707→    this.isRunning = false;
+  1708→  }
+  1709→
+  1710→  private gameLoop() {
+  1711→    if (!this.isRunning) return;
+  1712→    this.update();
+  1713→    requestAnimationFrame(() => this.gameLoop());
+  1714→  }
+  1715→
+  1716→  resize(width: number, height: number) {
+  1717→    this.camera.aspect = width / height;
+  1718→    this.camera.updateProjectionMatrix();
+  1719→    this.renderer.setSize(width, height);
+  1720→  }
+  1721→
+  1722→  reset() {
+  1723→    this.playerScore = 0;
+  1724→    this.opponentScore = 0;
+  1725→    this.hasBall = 'player';
+  1726→    this.ball.owner = 'player';
+  1727→    this.ball.isAirborne = false;
+  1728→    this.player.position.set(0, 0, 8);
+  1729→    this.opponent.position.set(0, 0, -8);
+  1730→    this.ball.position.set(0, 1, 5);
+  1731→    this.player.isShooting = false;
+  1732→    this.player.isDunking = false;
+  1733→    this.player.isJumping = false;
+  1734→    this.opponent.isShooting = false;
+  1735→    this.opponent.isDunking = false;
+  1736→    this.opponent.isJumping = false;
+  1737→    this.scoreCooldown = 0;
+  1738→    this.stealCooldown = 0;
+  1739→    this.shootPower = 0;
+  1740→    this.isShootingHold = false;
+  1741→    this.opponentThinkTimer = 0;
+  1742→    this.dribblePhase = 0;
+  1743→  }
+  1744→
+  1745→  setDifficulty(difficulty: number) {
+  1746→    // Adjust opponent behavior based on difficulty (0-1)
+  1747→    // Higher difficulty = faster, better shooting
+  1748→  }
+  1749→
+  1750→  getScores() {
+  1751→    return { player: this.playerScore, opponent: this.opponentScore };
+  1752→  }
+  1753→
+  1754→  destroy() {
+  1755→    this.isRunning = false;
+  1756→    (this as unknown as Record<string, () => void>)._cleanupInput?.();
+  1757→    this.renderer.dispose();
+  1758→    this.scene.traverse((obj) => {
+  1759→      if (obj instanceof THREE.Mesh) {
+  1760→        obj.geometry.dispose();
+  1761→        if (Array.isArray(obj.material)) {
+  1762→          obj.material.forEach(m => m.dispose());
+  1763→        } else {
+  1764→          obj.material.dispose();
+  1765→        }
+  1766→      }
+  1767→    });
+  1768→  }
+  1769→}

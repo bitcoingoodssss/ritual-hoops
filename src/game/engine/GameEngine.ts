@@ -229,85 +229,62 @@ export class GameEngine {
     this.buildBallTrail();
   }
 
+
   private buildSky() {
-    const skyGeo = new THREE.SphereGeometry(100, 32, 32);
-    const skyMat = new THREE.ShaderMaterial({
-      uniforms: {
-        topColor: { value: new THREE.Color(0x0a0a2e) },
-        bottomColor: { value: new THREE.Color(0x1a0a2e) },
-        offset: { value: 20 },
-        exponent: { value: 0.4 },
-      },
-      vertexShader: `
-        varying vec3 vWorldPosition;
-        void main() {
-          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-          vWorldPosition = worldPosition.xyz;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 topColor;
-        uniform vec3 bottomColor;
-        uniform float offset;
-        uniform float exponent;
-        varying vec3 vWorldPosition;
-        void main() {
-          float h = normalize(vWorldPosition + offset).y;
-          gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
-        }
-      `,
+    const skyGeo = new THREE.SphereGeometry(100, 16, 16);
+    const skyMat = new THREE.MeshBasicMaterial({
+      color: 0x050510,
       side: THREE.BackSide,
     });
     this.scene.add(new THREE.Mesh(skyGeo, skyMat));
-    
-    // Stars
-    const starsGeo = new THREE.BufferGeometry();
-    const starPositions: number[] = [];
-    for (let i = 0; i < 2000; i++) {
-      const r = 80 + Math.random() * 20;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI * 0.5;
-      starPositions.push(
-        r * Math.sin(phi) * Math.cos(theta),
-        r * Math.cos(phi) + 10,
-        r * Math.sin(phi) * Math.sin(theta)
-      );
-    }
-    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.8 });
-    this.scene.add(new THREE.Points(starsGeo, starsMat));
   }
 
   private buildArena() {
-    // Arena floor (dark surface around the court)
+    // Arena floor
     const arenaGeo = new THREE.PlaneGeometry(80, 80);
-    this.floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x111122,
-      roughness: 0.7,
-      metalness: 0.3,
+    const arenaMat = new THREE.MeshStandardMaterial({
+      color: 0x080810,
+      roughness: 0.85,
+      metalness: 0.2,
     });
-    this.arenaFloor = new THREE.Mesh(arenaGeo, this.floorMaterial);
-    this.arenaFloor.rotation.x = -Math.PI / 2;
-    this.arenaFloor.position.y = -0.01;
-    this.arenaFloor.receiveShadow = true;
-    this.scene.add(this.arenaFloor);
+    const arenaFloor = new THREE.Mesh(arenaGeo, arenaMat);
+    arenaFloor.rotation.x = -Math.PI / 2;
+    arenaFloor.position.y = -0.02;
+    arenaFloor.receiveShadow = true;
+    this.scene.add(arenaFloor);
+    
+    // Neon strip along court edges
+    const stripGeo = new THREE.BoxGeometry(COURT_WIDTH + 2, 0.15, COURT_LENGTH + 2);
+    const stripMat = new THREE.MeshStandardMaterial({
+      color: 0xff00ff,
+      emissive: 0xff00ff,
+      emissiveIntensity: 0.5,
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.4,
+    });
+    const neonStrip = new THREE.Mesh(stripGeo, stripMat);
+    neonStrip.rotation.x = -Math.PI / 2;
+    neonStrip.position.y = 0.02;
+    this.scene.add(neonStrip);
+    
+    this.floorMaterial = arenaMat;
     
     // Arena walls / stands
     this.buildStands();
   }
 
   private buildStands() {
-    const standMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.9, metalness: 0.1 });
+    const standMat = new THREE.MeshStandardMaterial({ color: 0x0a0a1a, roughness: 0.9, metalness: 0.1 });
     
-    // Back stand
-    const backStand = new THREE.Mesh(new THREE.BoxGeometry(60, 8, 3), standMat);
-    backStand.position.set(0, 3, -28);
+    // Simple back stand
+    const backStand = new THREE.Mesh(new THREE.BoxGeometry(60, 6, 3), standMat);
+    backStand.position.set(0, 3, -26);
     this.scene.add(backStand);
     
     // Front stand
-    const frontStand = new THREE.Mesh(new THREE.BoxGeometry(60, 8, 3), standMat);
-    frontStand.position.set(0, 3, 28);
+    const frontStand = new THREE.Mesh(new THREE.BoxGeometry(60, 6, 3), standMat);
+    frontStand.position.set(0, 3, 26);
     this.scene.add(frontStand);
     
     // Side stands
@@ -319,41 +296,20 @@ export class GameEngine {
     rightStand.position.set(16, 3, 0);
     this.scene.add(rightStand);
     
-    // Audience dots (colored points simulating crowd)
-    const crowdGeo = new THREE.BufferGeometry();
-    const crowdPositions: number[] = [];
-    const crowdColors: number[] = [];
-    const colors = [
-      [0xff6b35, 0x2ec4b6, 0xe71d36, 0xff9f1c, 0x7b2d8e, 0xf72585, 0x4cc9f0]
+    // Neon strip lights along court edges (punk feel)
+    const neonColors = [0xff00ff, 0x00ffff, 0xff00ff, 0xf72585];
+    const edgePositions = [
+      [-14, 0.1, -23.5], [14, 0.1, -23.5],
+      [-14, 0.1, 23.5], [14, 0.1, 23.5],
+      [14, 0.1, 0], [-14, 0.1, 0],
+      [-14, 0.1, -23.5], [14, 0.1, 23.5],
+      [14, 0.1, 0], [-14, 0.1, 0],
     ];
-    
-    for (let stand = 0; stand < 4; stand++) {
-      const count = 500;
-      for (let i = 0; i < count; i++) {
-        let x, y, z;
-        if (stand === 0) { x = -28 + Math.random() * 56; y = 0.5 + Math.random() * 7; z = -26 - Math.random() * 2; }
-        else if (stand === 1) { x = -28 + Math.random() * 56; y = 0.5 + Math.random() * 7; z = 26 + Math.random() * 2; }
-        else if (stand === 2) { x = -14 - Math.random() * 2; y = 0.5 + Math.random() * 7; z = -26 + Math.random() * 52; }
-        else { x = 14 + Math.random() * 2; y = 0.5 + Math.random() * 7; z = -26 + Math.random() * 52; }
-        
-        crowdPositions.push(x, y, z);
-        const c = colors[0][Math.floor(Math.random() * colors[0].length)];
-        const color = new THREE.Color(c);
-        crowdColors.push(color.r, color.g, color.b);
-      }
-    }
-    
-    crowdGeo.setAttribute('position', new THREE.Float32BufferAttribute(crowdPositions, 3));
-    crowdGeo.setAttribute('color', new THREE.Float32BufferAttribute(crowdColors, 3));
-    const crowdMat = new THREE.PointsMaterial({
-      size: 0.4,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.9,
+    edgePositions.forEach((pos, i) => {
+      const light = new THREE.PointLight(neonColors[i % neonColors.length], 2, 15);
+      light.position.set(...pos);
+      this.scene.add(light);
     });
-    const crowd = new THREE.Points(crowdGeo, crowdMat);
-    crowd.userData.isCrowd = true;
-    this.scene.add(crowd);
   }
 
   private buildCourt() {
@@ -362,15 +318,57 @@ export class GameEngine {
     // Court floor - polished wood look
     const courtGeo = new THREE.PlaneGeometry(COURT_WIDTH, COURT_LENGTH);
     const courtMat = new THREE.MeshStandardMaterial({
-      color: 0xcd8844,
-      roughness: 0.35,
-      metalness: 0.15,
+      color: 0xb85c3a,
+      roughness: 0.15,
+      metalness: 0.3,
     });
     const courtFloor = new THREE.Mesh(courtGeo, courtMat);
     courtFloor.rotation.x = -Math.PI / 2;
     courtFloor.receiveShadow = true;
     this.court.add(courtFloor);
-    
+
+    // === PLAYER SIDE INDICATORS ===
+    // Player's half (positive Z) - orange tint
+    const playerSideGeo = new THREE.PlaneGeometry(COURT_WIDTH, COURT_LENGTH / 2);
+    const playerSideMat = new THREE.MeshBasicMaterial({
+      color: 0xff8c00,
+      transparent: true,
+      opacity: 0.07,
+      side: THREE.DoubleSide,
+    });
+    const playerSidePlane = new THREE.Mesh(playerSideGeo, playerSideMat);
+    playerSidePlane.rotation.x = -Math.PI / 2;
+    playerSidePlane.position.set(0, 0.005, COURT_LENGTH / 4);
+    this.court.add(playerSidePlane);
+
+    // Opponent's half (negative Z) - cyan tint
+    const oppSideGeo = new THREE.PlaneGeometry(COURT_WIDTH, COURT_LENGTH / 2);
+    const oppSideMat = new THREE.MeshBasicMaterial({
+      color: 0x00e5ff,
+      transparent: true,
+      opacity: 0.07,
+      side: THREE.DoubleSide,
+    });
+    const oppSidePlane = new THREE.Mesh(oppSideGeo, oppSideMat);
+    oppSidePlane.rotation.x = -Math.PI / 2;
+    oppSidePlane.position.set(0, 0.005, -COURT_LENGTH / 4);
+    this.court.add(oppSidePlane);
+
+    // Direction arrow cone pointing toward player's hoop (+Z)
+    const arrowGeo = new THREE.ConeGeometry(0.3, 0.8, 8);
+    const arrowMat = new THREE.MeshStandardMaterial({
+      color: 0x00e5ff,
+      emissive: 0x00e5ff,
+      emissiveIntensity: 0.5,
+      roughness: 0.3,
+      metalness: 0.4,
+    });
+    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    arrow.rotation.x = -Math.PI / 2;
+    arrow.position.set(0, 0.5, 5);
+    arrow.name = 'directionArrow';
+    this.court.add(arrow);
+
     // Court lines
     const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
     
@@ -428,6 +426,73 @@ export class GameEngine {
     this.addCourtCircle(this.court, 0, 0.01, -COURT_LENGTH / 2 + 5.8, 1.8, 32, lineMat);
     
     this.scene.add(this.court);
+    
+    // "YOUR HOOP" neon arrow indicator
+    const arrowGroup = new THREE.Group();
+    
+    // Glowing arrow pointing to player's hoop (+Z direction)
+    const arrowGeo = new THREE.ConeGeometry(0.3, 1.5, 8);
+    const arrowMat = new THREE.MeshStandardMaterial({
+      color: 0x00ffdd,
+      emissive: 0x00ffdd,
+      emissiveIntensity: 0.8,
+      transparent: true,
+      opacity: 0.8,
+    });
+    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    arrow.position.set(0, 0.6, 8);
+    arrow.rotation.x = Math.PI; // Points +Z
+    arrowGroup.add(arrow);
+    
+    // Text label "YOUR HOOP" using canvas texture
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#00ffdd';
+    ctx.font = 'bold 80px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('YOUR HOOP', 256, 80);
+    
+    const labelTexture = new THREE.CanvasTexture(canvas);
+    const labelGeo = new THREE.PlaneGeometry(4, 1);
+    const labelMat = new THREE.MeshBasicMaterial({
+      map: labelTexture,
+      transparent: true,
+      opacity: 0.7,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const label = new THREE.Mesh(labelGeo, labelMat);
+    label.position.set(0, 0.5, 12);
+    label.rotation.x = -Math.PI / 2;
+    arrowGroup.add(label);
+    
+    // "OPPONENT" label on opponent side
+    const canvas2 = document.createElement('canvas');
+    canvas2.width = 512;
+    canvas2.height = 128;
+    const ctx2 = canvas2.getContext('2d')!;
+    ctx2.fillStyle = '#ff0066';
+    ctx2.font = 'bold 80px Arial, sans-serif';
+    ctx2.textAlign = 'center';
+    ctx2.fillText('OPPONENT', 256, 80);
+    
+    const labelTexture2 = new THREE.CanvasTexture(canvas2);
+    const labelGeo2 = new THREE.PlaneGeometry(4, 1);
+    const labelMat2 = new THREE.MeshBasicMaterial({
+      map: labelTexture2,
+      transparent: true,
+      opacity: 0.5,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const label2 = new THREE.Mesh(labelGeo2, labelMat2);
+    label2.position.set(0, 0.5, -12);
+    label2.rotation.x = -Math.PI / 2;
+    arrowGroup.add(label2);
+    
+    this.scene.add(arrowGroup);
   }
 
   private addCourtLine(parent: THREE.Group, points: number[][], material: THREE.LineBasicMaterial) {
@@ -551,86 +616,208 @@ export class GameEngine {
 
   private buildPlayerMesh(color: number): THREE.Group {
     const player = new THREE.Group();
-    
-    // Body
-    const bodyGeo = new THREE.CylinderGeometry(0.3, 0.35, 1.0, 8);
-    const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.2 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 1.0;
-    body.castShadow = true;
-    player.add(body);
-    body.name = 'body';
-    
-    // Head
-    const headGeo = new THREE.SphereGeometry(0.28, 16, 16);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xffcc99, roughness: 0.7, metalness: 0.1 });
+
+    const skinColor = 0xd4a574;
+    const shortsColor = 0x1a1a2e;
+    const shoeColor = color === 0xff6b35 ? 0x00e5ff : 0xff1744;
+
+    // === HEAD ===
+    const headGeo = new THREE.SphereGeometry(0.13, 16, 12);
+    const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.7, metalness: 0.05 });
     const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 1.78;
+    head.position.y = 1.75;
     head.castShadow = true;
-    player.add(head);
     head.name = 'head';
-    
+    player.add(head);
+
+    // Neck
+    const neckGeo = new THREE.CylinderGeometry(0.06, 0.07, 0.08, 8);
+    const neck = new THREE.Mesh(neckGeo, headMat);
+    neck.position.y = 1.62;
+    player.add(neck);
+
     // Face plane (for avatar)
-    const faceGeo = new THREE.PlaneGeometry(0.35, 0.35);
-    const faceMat = new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0 });
+    const faceGeo = new THREE.PlaneGeometry(0.5, 0.5);
+    const faceMat = new THREE.MeshBasicMaterial({ color: 0x888888, transparent: true, opacity: 0, side: THREE.DoubleSide });
     const face = new THREE.Mesh(faceGeo, faceMat);
-    face.position.set(0, 1.78, 0.26);
+    face.position.set(0, 1.78, 0.14);
     face.name = 'face';
     player.add(face);
-    
-    // Left arm
-    const armGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.6, 6);
-    const armMat = new THREE.MeshStandardMaterial({ color: 0xffcc99, roughness: 0.7 });
-    const leftArm = new THREE.Mesh(armGeo, armMat);
-    leftArm.position.set(-0.42, 1.15, 0);
-    leftArm.rotation.z = 0.3;
-    leftArm.castShadow = true;
-    leftArm.name = 'leftArm';
-    player.add(leftArm);
-    
-    const rightArm = new THREE.Mesh(armGeo, armMat);
-    rightArm.position.set(0.42, 1.15, 0);
-    rightArm.rotation.z = -0.3;
-    rightArm.castShadow = true;
-    rightArm.name = 'rightArm';
-    player.add(rightArm);
-    
-    // Legs
-    const legGeo = new THREE.CylinderGeometry(0.1, 0.09, 0.7, 6);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x222244, roughness: 0.7 });
-    const leftLeg = new THREE.Mesh(legGeo, legMat);
-    leftLeg.position.set(-0.15, 0.35, 0);
-    leftLeg.castShadow = true;
-    leftLeg.name = 'leftLeg';
-    player.add(leftLeg);
-    
-    const rightLeg = new THREE.Mesh(legGeo, legMat);
-    rightLeg.position.set(0.15, 0.35, 0);
-    rightLeg.castShadow = true;
-    rightLeg.name = 'rightLeg';
-    player.add(rightLeg);
-    
-    // Shoes
-    const shoeGeo = new THREE.BoxGeometry(0.2, 0.12, 0.35);
-    const shoeMat = new THREE.MeshStandardMaterial({ color: 0xff4444, roughness: 0.4, metalness: 0.3 });
-    const leftShoe = new THREE.Mesh(shoeGeo, shoeMat);
-    leftShoe.position.set(-0.15, 0.06, 0.05);
-    leftShoe.name = 'leftShoe';
+
+    // === TORSO (jersey) ===
+    const torsoGeo = new THREE.CylinderGeometry(0.22, 0.18, 0.55, 10);
+    const torsoMat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.15 });
+    const torso = new THREE.Mesh(torsoGeo, torsoMat);
+    torso.position.y = 1.3;
+    torso.castShadow = true;
+    torso.name = 'body';
+    player.add(torso);
+
+    // === SHORTS ===
+    const shortsGeo = new THREE.CylinderGeometry(0.18, 0.20, 0.22, 10);
+    const shortsMat = new THREE.MeshStandardMaterial({ color: shortsColor, roughness: 0.7, metalness: 0.05 });
+    const shorts = new THREE.Mesh(shortsGeo, shortsMat);
+    shorts.position.y = 0.93;
+    shorts.castShadow = true;
+    player.add(shorts);
+
+    // === ARMS (upper + lower + hands) ===
+    const upperArmLen = 0.30;
+    const lowerArmLen = 0.28;
+    const handRad = 0.055;
+    const armSeg = 8;
+
+    // Shoulder-to-upper-arm pivot
+    function createArm(side: number): THREE.Group {
+      const armGroup = new THREE.Group();
+      armGroup.name = side < 0 ? 'leftArm' : 'rightArm';
+
+      // Upper arm (capsule-like: cylinder + 2 hemispheres)
+      const upperGeo = new THREE.CylinderGeometry(0.045, 0.042, upperArmLen, armSeg);
+      const upperMat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.1 });
+      const upper = new THREE.Mesh(upperGeo, upperMat);
+      upper.position.y = -upperArmLen / 2;
+      upper.castShadow = true;
+      armGroup.add(upper);
+
+      // Elbow sphere
+      const elbowGeo = new THREE.SphereGeometry(0.048, 8, 6);
+      const elbow = new THREE.Mesh(elbowGeo, headMat);
+      elbow.position.y = -upperArmLen;
+      armGroup.add(elbow);
+
+      // Lower arm (skin)
+      const lowerGeo = new THREE.CylinderGeometry(0.04, 0.038, lowerArmLen, armSeg);
+      const lower = new THREE.Mesh(lowerGeo, headMat);
+      lower.position.y = -upperArmLen - lowerArmLen / 2;
+      lower.castShadow = true;
+      armGroup.add(lower);
+
+      // Wrist sphere
+      const wristGeo = new THREE.SphereGeometry(0.04, 8, 6);
+      const wrist = new THREE.Mesh(wristGeo, headMat);
+      wrist.position.y = -upperArmLen - lowerArmLen;
+      armGroup.add(wrist);
+
+      // Hand
+      const handGeo = new THREE.SphereGeometry(handRad, 8, 6);
+      const hand = new THREE.Mesh(handGeo, headMat);
+      hand.position.y = -upperArmLen - lowerArmLen - handRad;
+      hand.castShadow = true;
+      hand.name = side < 0 ? 'leftHand' : 'rightHand';
+      armGroup.add(hand);
+
+      return armGroup;
+    }
+
+    const leftArmGroup = createArm(-1);
+    leftArmGroup.position.set(-0.28, 1.55, 0);
+    leftArmGroup.rotation.z = 0.2;
+    player.add(leftArmGroup);
+
+    const rightArmGroup = createArm(1);
+    rightArmGroup.position.set(0.28, 1.55, 0);
+    rightArmGroup.rotation.z = -0.2;
+    player.add(rightArmGroup);
+
+    // === LEGS (upper + lower) ===
+    const upperLegLen = 0.40;
+    const lowerLegLen = 0.42;
+
+    function createLeg(side: number): THREE.Group {
+      const legGroup = new THREE.Group();
+      legGroup.name = side < 0 ? 'leftLeg' : 'rightLeg';
+
+      // Upper leg (shorts-colored)
+      const upperGeo = new THREE.CylinderGeometry(0.085, 0.075, upperLegLen, armSeg);
+      const upper = new THREE.Mesh(upperGeo, shortsMat);
+      upper.position.y = -upperLegLen / 2;
+      upper.castShadow = true;
+      legGroup.add(upper);
+
+      // Knee sphere
+      const kneeGeo = new THREE.SphereGeometry(0.065, 8, 6);
+      const knee = new THREE.Mesh(kneeGeo, headMat);
+      knee.position.y = -upperLegLen;
+      legGroup.add(knee);
+
+      // Lower leg (skin)
+      const lowerGeo = new THREE.CylinderGeometry(0.065, 0.058, lowerLegLen, armSeg);
+      const lower = new THREE.Mesh(lowerGeo, headMat);
+      lower.position.y = -upperLegLen - lowerLegLen / 2;
+      lower.castShadow = true;
+      legGroup.add(lower);
+
+      // Ankle sphere
+      const ankleGeo = new THREE.SphereGeometry(0.05, 8, 6);
+      const ankle = new THREE.Mesh(ankleGeo, headMat);
+      ankle.position.y = -upperLegLen - lowerLegLen;
+      legGroup.add(ankle);
+
+      return legGroup;
+    }
+
+    const leftLegGroup = createLeg(-1);
+    leftLegGroup.position.set(-0.10, 0.82, 0);
+    player.add(leftLegGroup);
+
+    const rightLegGroup = createLeg(1);
+    rightLegGroup.position.set(0.10, 0.82, 0);
+    player.add(rightLegGroup);
+
+    // === SHOES ===
+    const shoeMat = new THREE.MeshStandardMaterial({ color: shoeColor, roughness: 0.3, metalness: 0.4 });
+
+    function createShoe(side: number): THREE.Group {
+      const shoeGroup = new THREE.Group();
+      shoeGroup.name = side < 0 ? 'leftShoe' : 'rightShoe';
+
+      // Sole
+      const soleGeo = new THREE.BoxGeometry(0.14, 0.06, 0.26);
+      const soleMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5, metalness: 0.1 });
+      const sole = new THREE.Mesh(soleGeo, soleMat);
+      sole.position.y = 0.03;
+      shoeGroup.add(sole);
+
+      // Upper
+      const upperGeo = new THREE.BoxGeometry(0.13, 0.10, 0.24);
+      const upper = new THREE.Mesh(upperGeo, shoeMat);
+      upper.position.y = 0.09;
+      upper.castShadow = true;
+      shoeGroup.add(upper);
+
+      // Toe cap (hemisphere-like)
+      const toeGeo = new THREE.SphereGeometry(0.065, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+      const toe = new THREE.Mesh(toeGeo, shoeMat);
+      toe.rotation.x = Math.PI / 2;
+      toe.position.set(0, 0.09, 0.12);
+      shoeGroup.add(toe);
+
+      return shoeGroup;
+    }
+
+    const leftShoe = createShoe(-1);
+    leftShoe.position.set(-0.10, 0, 0.02);
     player.add(leftShoe);
-    
-    const rightShoe = new THREE.Mesh(shoeGeo, shoeMat);
-    rightShoe.position.set(0.15, 0.06, 0.05);
-    rightShoe.name = 'rightShoe';
+
+    const rightShoe = createShoe(1);
+    rightShoe.position.set(0.10, 0, 0.02);
     player.add(rightShoe);
-    
-    // Jersey number (small box on chest)
-    const numGeo = new THREE.PlaneGeometry(0.2, 0.25);
-    const numMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+
+    // Jersey number on chest
+    const numGeo = new THREE.PlaneGeometry(0.18, 0.22);
+    const numMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
     const num = new THREE.Mesh(numGeo, numMat);
-    num.position.set(0, 1.15, 0.31);
+    num.position.set(0, 1.35, 0.185);
     num.name = 'jerseyNum';
     player.add(num);
-    
+
+    // Jersey number on back
+    const numBack = new THREE.Mesh(numGeo.clone(), numMat.clone());
+    numBack.position.set(0, 1.35, -0.185);
+    numBack.rotation.y = Math.PI;
+    player.add(numBack);
+
     return player;
   }
 
@@ -661,45 +848,34 @@ export class GameEngine {
   }
 
   private buildLights() {
-    this.ambientLight = new THREE.AmbientLight(0x334466, 0.6);
+    // Ambient - very dim for moody atmosphere
+    this.ambientLight = new THREE.AmbientLight(0x110022, 0.4);
     this.scene.add(this.ambientLight);
     
-    // Main spotlight from above
-    const mainLight = new THREE.SpotLight(0xffffff, 100, 60, Math.PI / 4, 0.5, 1);
-    mainLight.position.set(0, 20, 0);
+    // Main overhead spotlight (bright white)
+    const mainLight = new THREE.SpotLight(0xffffff, 80, 50, Math.PI / 3.5, 0.6, 1);
+    mainLight.position.set(0, 22, 0);
     mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 2048;
-    mainLight.shadow.mapSize.height = 2048;
-    mainLight.shadow.camera.near = 1;
-    mainLight.shadow.camera.far = 40;
+    mainLight.shadow.mapSize.width = 1024;
+    mainLight.shadow.mapSize.height = 1024;
     this.scene.add(mainLight);
     this.spotLights.push(mainLight);
     
-    // Colored accent lights
-    const colors = [0xff6b35, 0x2ec4b6, 0xf72585, 0x4cc9f0];
-    const positions = [
-      [-15, 12, -15], [15, 12, -15], [-15, 12, 15], [15, 12, 15]
+    // Punk-colored corner lights (pink, cyan, purple, green)
+    const punkLights = [
+      { color: 0xff0066, pos: [-12, 8, -12], target: [-4, 0, -8] },
+      { color: 0x00ffdd, pos: [12, 8, -12], target: [4, 0, -8] },
+      { color: 0xaa00ff, pos: [-12, 8, 12], target: [-4, 0, 8] },
+      { color: 0x00ff66, pos: [12, 8, 12], target: [4, 0, 8] },
     ];
     
-    colors.forEach((color, i) => {
-      const light = new THREE.SpotLight(color, 30, 50, Math.PI / 3, 0.6, 1.5);
-      light.position.set(...positions[i]);
-      light.target.position.set(0, 0, 0);
+    punkLights.forEach(({ color, pos, target }) => {
+      const light = new THREE.SpotLight(color, 40, 40, Math.PI / 3, 0.7, 1.5);
+      light.position.set(...pos);
+      light.target.position.set(...target);
       this.scene.add(light);
-      this.scene.add(light.target);
       this.spotLights.push(light);
     });
-    
-    // Rim lights at court edges
-    const rimLight1 = new THREE.PointLight(0xff6b35, 5, 30);
-    rimLight1.position.set(0, 2, COURT_LENGTH / 2);
-    this.scene.add(rimLight1);
-    this.spotLights.push(rimLight1 as unknown as THREE.SpotLight);
-    
-    const rimLight2 = new THREE.PointLight(0x2ec4b6, 5, 30);
-    rimLight2.position.set(0, 2, -COURT_LENGTH / 2);
-    this.scene.add(rimLight2);
-    this.spotLights.push(rimLight2 as unknown as THREE.SpotLight);
   }
 
   private buildParticleSystem() {
@@ -751,40 +927,69 @@ export class GameEngine {
 
   // ============== AVATAR ==============
   setPlayerAvatar(url: string) {
-    const loader = new THREE.TextureLoader();
-    loader.crossOrigin = 'anonymous';
-    loader.load(url, (texture) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const texture = new THREE.CanvasTexture(canvas);
       texture.colorSpace = THREE.SRGBColorSpace;
       this.playerAvatarTexture = texture;
       const face = this.playerMesh.getObjectByName('face') as THREE.Mesh;
       if (face) {
-        (face.material as THREE.MeshBasicMaterial).map = texture;
-        (face.material as THREE.MeshBasicMaterial).opacity = 1;
-        (face.material as THREE.MeshBasicMaterial).needsUpdate = true;
+        const mat = face.material as THREE.MeshBasicMaterial;
+        mat.map = texture;
+        mat.transparent = true;
+        mat.opacity = 1;
+        mat.side = THREE.DoubleSide;
+        mat.needsUpdate = true;
       }
-    }, undefined, () => {
-      // Fallback: use a colored circle
+    };
+    img.onerror = () => {
       const face = this.playerMesh.getObjectByName('face') as THREE.Mesh;
       if (face) {
-        (face.material as THREE.MeshBasicMaterial).color.set(0xff6b35);
-        (face.material as THREE.MeshBasicMaterial).opacity = 0.8;
+        const mat = face.material as THREE.MeshBasicMaterial;
+        mat.color.set(0xff6b35);
+        mat.opacity = 0.8;
       }
-    });
+    };
+    img.src = url;
   }
 
   setOpponentAvatar(url: string) {
-    const loader = new THREE.TextureLoader();
-    loader.crossOrigin = 'anonymous';
-    loader.load(url, (texture) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const texture = new THREE.CanvasTexture(canvas);
       texture.colorSpace = THREE.SRGBColorSpace;
       this.opponentAvatarTexture = texture;
       const face = this.opponentMesh.getObjectByName('face') as THREE.Mesh;
       if (face) {
-        (face.material as THREE.MeshBasicMaterial).map = texture;
-        (face.material as THREE.MeshBasicMaterial).opacity = 1;
-        (face.material as THREE.MeshBasicMaterial).needsUpdate = true;
+        const mat = face.material as THREE.MeshBasicMaterial;
+        mat.map = texture;
+        mat.transparent = true;
+        mat.opacity = 1;
+        mat.side = THREE.DoubleSide;
+        mat.needsUpdate = true;
       }
-    });
+    };
+    img.onerror = () => {
+      const face = this.opponentMesh.getObjectByName('face') as THREE.Mesh;
+      if (face) {
+        const mat = face.material as THREE.MeshBasicMaterial;
+        mat.color.set(0x2ec4b6);
+        mat.opacity = 0.8;
+      }
+    };
+    img.src = url;
   }
 
   // ============== INPUT ==============

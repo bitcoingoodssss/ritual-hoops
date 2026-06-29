@@ -4,11 +4,72 @@ import { useState } from 'react';
 import { useGameStore, ALL_NFTS } from '@/store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
+function WalletConnectModal({ onClose }: { onClose: () => void }) {
+  const { setWalletAddress, setWalletConnected, setRitualBalance } = useGameStore();
+  const [connecting, setConnecting] = useState(false);
+
+  const connectWallet = async (walletType: string) => {
+    setConnecting(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    const fakeAddress = '0x' + Array.from({ length: 40 }, () =>
+      '0123456789abcdef'[Math.floor(Math.random() * 16)]
+    ).join('');
+    setWalletAddress(fakeAddress);
+    setWalletConnected(true);
+    setRitualBalance(200);
+    setConnecting(false);
+    onClose();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        className="bg-gray-900 rounded-2xl p-6 max-w-sm w-full mx-4 border border-cyan-500/30 shadow-2xl shadow-cyan-500/10"
+      >
+        <h3 className="text-lg font-bold text-white mb-1">Connect Wallet</h3>
+        <p className="text-sm text-gray-400 mb-5">Connect your wallet on Ritual Chain to mint NFTs</p>
+        <div className="space-y-3">
+          {[
+            { name: 'MetaMask', icon: '🦊' },
+            { name: 'WalletConnect', icon: '🔗' },
+            { name: 'Coinbase Wallet', icon: '💎' },
+            { name: 'Ritual Wallet', icon: '🔮' },
+          ].map(wallet => (
+            <button
+              key={wallet.name}
+              onClick={() => connectWallet(wallet.name)}
+              disabled={connecting}
+              className="w-full flex items-center gap-3 p-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition-all border border-gray-600/50 disabled:opacity-50"
+            >
+              <div className="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center text-lg">
+                {wallet.icon}
+              </div>
+              <span className="text-sm font-bold text-white">{wallet.name}</span>
+              <span className="text-[10px] text-gray-500 ml-auto">Ritual</span>
+            </button>
+          ))}
+        </div>
+        <button onClick={onClose} className="w-full mt-4 py-2 text-gray-400 text-sm hover:text-white transition-colors">
+          Cancel
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: () => void; onOpenShop: () => void }) {
   const { twitterId, setTwitterId, setAvatarUrl, setPlayerName, walletConnected, avatarUrl } = useGameStore();
   const [inputId, setInputId] = useState(twitterId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showWallet, setShowWallet] = useState(false);
 
   const handleSubmit = async () => {
     if (!inputId.trim()) {
@@ -44,14 +105,20 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
   };
 
   return (
-    <div className="relative w-full h-screen flex items-center justify-center overflow-hidden"
-         style={{ background: 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%)' }}>
+    <div className="relative w-full h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url(/home-bg.jpg)' }}
+      />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
       
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      {/* Animated accent glow on top of background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-orange-500/15 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         
         {/* Floating basketball emojis */}
         {[...Array(8)].map((_, i) => (
@@ -184,10 +251,14 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
             🛒 NFT Shop
           </button>
           <button
-            onClick={() => useGameStore.getState().setPhase('nftShop')}
-            className="flex-1 py-3 bg-gray-800/60 border border-cyan-500/30 text-cyan-300 font-bold rounded-xl hover:bg-cyan-900/40 transition-all"
+            onClick={() => setShowWallet(true)}
+            className={`flex-1 py-3 border font-bold rounded-xl transition-all ${
+              walletConnected
+                ? 'bg-green-900/40 border-green-500/50 text-green-300'
+                : 'bg-gray-800/60 border-cyan-500/30 text-cyan-300 hover:bg-cyan-900/40'
+            }`}
           >
-            🔗 Connect Wallet
+            {walletConnected ? '✅ Wallet Connected' : '🔗 Connect Wallet'}
           </button>
         </motion.div>
 
@@ -197,6 +268,11 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
           <p className="mt-1">First to 11 points wins • 3 min per game</p>
         </div>
       </div>
+
+      {/* Wallet Modal */}
+      <AnimatePresence>
+        {showWallet && <WalletConnectModal onClose={() => setShowWallet(false)} />}
+      </AnimatePresence>
     </div>
   );
 }
