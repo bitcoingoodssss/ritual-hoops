@@ -1,25 +1,52 @@
 'use client';
 
 import { useState } from 'react';
-import { useGameStore, ALL_NFTS } from '@/store/gameStore';
+import { useGameStore } from '@/store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { t } from '@/lib/i18n';
+import { connectRitualWallet, hasMetaMask, getRitualBalance, isRitualChain, shortenAddress } from '@/lib/ritualWallet';
 
 function WalletConnectModal({ onClose }: { onClose: () => void }) {
   const { setWalletAddress, setWalletConnected, setRitualBalance, lang } = useGameStore();
   const [connecting, setConnecting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const connectWallet = async (walletType: string) => {
+    if (walletType === 'MetaMask' && !hasMetaMask()) {
+      setErrorMsg(lang === 'zh' ? '请先安装 MetaMask 浏览器插件' : 'Please install MetaMask browser extension first');
+      return;
+    }
+
     setConnecting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const fakeAddress = '0x' + Array.from({ length: 40 }, () =>
-      '0123456789abcdef'[Math.floor(Math.random() * 16)]
-    ).join('');
-    setWalletAddress(fakeAddress);
-    setWalletConnected(true);
-    setRitualBalance(200);
-    setConnecting(false);
-    onClose();
+    setErrorMsg('');
+
+    try {
+      const { address, chainId } = await connectRitualWallet();
+
+      if (!isRitualChain(chainId)) {
+        setErrorMsg(lang === 'zh' ? '请切换到 Ritual 网络' : 'Please switch to Ritual network');
+        setConnecting(false);
+        return;
+      }
+
+      setWalletAddress(address);
+      setWalletConnected(true);
+
+      // Get real balance
+      try {
+        const bal = await getRitualBalance(address);
+        setRitualBalance(parseFloat(bal) * 1000); // Display as mETH for game
+      } catch {
+        setRitualBalance(0);
+      }
+
+      setConnecting(false);
+      onClose();
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setErrorMsg(e.message || (lang === 'zh' ? '连接失败' : 'Connection failed'));
+      setConnecting(false);
+    }
   };
 
   return (
@@ -38,10 +65,10 @@ function WalletConnectModal({ onClose }: { onClose: () => void }) {
         <p className="text-sm text-gray-400 mb-5">{t('wallet.connectDesc', lang)}</p>
         <div className="space-y-3">
           {[
-            { name: 'MetaMask', icon: '🦊' },
-            { name: 'WalletConnect', icon: '🔗' },
-            { name: 'Coinbase Wallet', icon: '💎' },
-            { name: 'Ritual Wallet', icon: '🔮' },
+            { name: 'MetaMask', icon: '🦊', desc: 'Recommended' },
+            { name: 'WalletConnect', icon: '🔗', desc: 'Mobile' },
+            { name: 'Coinbase Wallet', icon: '💎', desc: '' },
+            { name: 'Ritual Wallet', icon: '🔮', desc: 'Native' },
           ].map(wallet => (
             <button
               key={wallet.name}
@@ -52,11 +79,15 @@ function WalletConnectModal({ onClose }: { onClose: () => void }) {
               <div className="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center text-lg">
                 {wallet.icon}
               </div>
-              <span className="text-sm font-bold text-white">{wallet.name}</span>
-              <span className="text-[10px] text-gray-500 ml-auto">Ritual</span>
+              <div className="text-left">
+                <span className="text-sm font-bold text-white block">{wallet.name}</span>
+                {wallet.desc && <span className="text-[10px] text-gray-500">{wallet.desc}</span>}
+              </div>
+              <span className="text-[10px] text-cyan-400 ml-auto font-bold">Ritual</span>
             </button>
           ))}
         </div>
+        {errorMsg && <p className="text-red-400 text-xs mt-3 text-center">{errorMsg}</p>}
         <button onClick={onClose} className="w-full mt-4 py-2 text-gray-400 text-sm hover:text-white transition-colors">
           {t('wallet.cancel', lang)}
         </button>

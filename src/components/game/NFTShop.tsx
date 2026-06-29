@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useGameStore, ALL_NFTS } from '@/store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { t } from '@/lib/i18n';
+import { connectRitualWallet, hasMetaMask, getRitualBalance, isRitualChain } from '@/lib/ritualWallet';
 
 function StatBlock({ label, value, color }: { label: string; value: number; color: string }) {
   const maxVal = 10;
@@ -60,7 +61,17 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
   const isOwned = (nftId: string) => ownedNFTs.some(n => n.id === nftId);
   const isEquipped = (nftId: string) => Object.values(equippedNFTs).some(n => n?.id === nftId);
 
-  const getNFTIcon = (type: string) => {
+  const getRarityIcon = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return '⚪';
+      case 'rare': return '🔵';
+      case 'epic': return '🟣';
+      case 'legendary': return '🟡';
+      default: return '⚪';
+    }
+  };
+
+  const getNFTIcon = (type: string, _rarity?: string) => {
     switch (type) {
       case 'jersey': return '👕';
       case 'shoes': return '👟';
@@ -247,32 +258,55 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
 }
 
 function WalletConnectModal({ onClose }: { onClose: () => void }) {
-  const { setWalletAddress, setWalletConnected, setRitualBalance } = useGameStore();
+  const { setWalletAddress, setWalletConnected, setRitualBalance, lang } = useGameStore();
   const [connecting, setConnecting] = useState(false);
-  const connectWallet = async () => {
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const connectWallet = async (walletType: string) => {
+    if (walletType === 'MetaMask' && !hasMetaMask()) {
+      setErrorMsg(lang === 'zh' ? '请先安装 MetaMask 浏览器插件' : 'Please install MetaMask browser extension first');
+      return;
+    }
     setConnecting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const addr = '0x' + Array.from({ length: 40 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
-    setWalletAddress(addr);
-    setWalletConnected(true);
-    setRitualBalance(1.0);
-    setConnecting(false);
-    onClose();
+    setErrorMsg('');
+    try {
+      const { address, chainId } = await connectRitualWallet();
+      if (!isRitualChain(chainId)) {
+        setErrorMsg(lang === 'zh' ? '请切换到 Ritual 网络' : 'Please switch to Ritual network');
+        setConnecting(false);
+        return;
+      }
+      setWalletAddress(address);
+      setWalletConnected(true);
+      try {
+        const bal = await getRitualBalance(address);
+        setRitualBalance(parseFloat(bal) * 1000);
+      } catch {
+        setRitualBalance(0);
+      }
+      setConnecting(false);
+      onClose();
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setErrorMsg(e.message || (lang === 'zh' ? '连接失败' : 'Connection failed'));
+      setConnecting(false);
+    }
   };
   return (
     <div className="bg-gray-900 rounded-2xl p-6 max-w-sm w-full mx-4 border border-cyan-500/30 shadow-2xl">
-      <h3 className="text-lg font-bold text-white mb-1">Connect Wallet</h3>
-      <p className="text-sm text-gray-400 mb-5">Connect on Ritual Chain to mint NFTs</p>
+      <h3 className="text-lg font-bold text-white mb-1">{t('wallet.connectTitle', lang)}</h3>
+      <p className="text-sm text-gray-400 mb-5">{t('wallet.connectDesc', lang)}</p>
       <div className="space-y-3">
         {[{ n: 'MetaMask', i: '🦊' }, { n: 'WalletConnect', i: '🔗' }, { n: 'Coinbase Wallet', i: '💎' }, { n: 'Ritual Wallet', i: '🔮' }].map(w => (
-          <button key={w.n} onClick={connectWallet} disabled={connecting} className="w-full flex items-center gap-3 p-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition-all border border-gray-600/50 disabled:opacity-50">
+          <button key={w.n} onClick={() => connectWallet(w.n)} disabled={connecting} className="w-full flex items-center gap-3 p-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition-all border border-gray-600/50 disabled:opacity-50">
             <div className="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center text-lg">{w.i}</div>
             <span className="text-sm font-bold text-white">{w.n}</span>
-            <span className="text-[10px] text-gray-500 ml-auto">Ritual</span>
+            <span className="text-[10px] text-cyan-400 ml-auto font-bold">Ritual</span>
           </button>
         ))}
       </div>
-      <button onClick={onClose} className="w-full mt-4 py-2 text-gray-400 text-sm hover:text-white transition-colors">Cancel</button>
+      {errorMsg && <p className="text-red-400 text-xs mt-3 text-center">{errorMsg}</p>}
+      <button onClick={onClose} className="w-full mt-4 py-2 text-gray-400 text-sm hover:text-white transition-colors">{t('wallet.cancel', lang)}</button>
     </div>
   );
 }
