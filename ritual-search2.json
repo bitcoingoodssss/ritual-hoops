@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://docs.ritualfoundation.org",
+    "name": "Ritual Chain Developer Documentation",
+    "snippet": "Add Ritual Chain to MetaMask or any EVM wallet: Field, Value. Network Name, Ritual. Chain ID, 1979. RPC URL, https://rpc.ritualfoundation.org. Currency Symbol ...",
+    "host_name": "docs.ritualfoundation.org",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://chainlist.org/chain/13390",
+    "name": "MeeChain Network RPC and Chain settings - ChainList",
+    "snippet": "Users can use the information to connect their wallets and Web3 middleware providers to the appropriate Chain ID and Network ID to connect to the correct chain.",
+    "host_name": "chainlist.org",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://chainlist.org",
+    "name": "ChainList",
+    "snippet": "ChainList is a list of RPCs for EVM(Ethereum Virtual Machine) networks. Use the information to connect your wallets and Web3 middleware providers to the ...",
+    "host_name": "chainlist.org",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.kucoin.com/news/community/ETH/69f8325f2f8d6c000732188e",
+    "name": "Ritual Testnet RPC Setup – Full Video Guide I'll show you - KuCoin",
+    "snippet": "Ritual Testnet RPC Setup – Full Video Guide I'll show you ... Tips: Always double-check the RPC URL and Chain ID to avoid fake networks.",
+    "host_name": "www.kucoin.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://x.com/lawrenx_/status/2047940406059397401",
+    "name": "getting started on ritual testnet step 1 connect to the network add",
+    "snippet": "|network name - ritual |chain id - 1979 |rpc url - [ rpc.ritualfoundation.org] |currency symbol - ritual |block explorer -[ explorer ...",
+    "host_name": "x.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]

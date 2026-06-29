@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://chainlist.org",
+    "name": "ChainList",
+    "snippet": "ChainList is a list of EVM networks. Users can use the information to connect their wallets and Web3 middleware providers to the appropriate Chain ID and ...",
+    "host_name": "chainlist.org",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://chainlist.org/chain/8453",
+    "name": "Base RPC and Chain settings | ChainList",
+    "snippet": "ChainList is a list of EVM networks. Users can use the information to connect their wallets and Web3 middleware providers to the appropriate Chain ID and ...",
+    "host_name": "chainlist.org",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.nethereum.com/docs/data-services/guide-chainlist-rpc",
+    "name": "Chainlist RPC Discovery | Nethereum",
+    "snippet": "Chainlist maintains a public registry of every known EVM chain — names, chain IDs, RPC endpoints, native currencies, block explorers, and faucets.",
+    "host_name": "docs.nethereum.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/actuallymentor/chainlist-rpcs",
+    "name": "Wrapper around the rpcs as published by DefiLlama/chainlist. · GitHub",
+    "snippet": "Chain id 1 is Ethereum mainnet. chain by its chain id. This module makes available helpers that allow you to grab RPCs based on chain id or chain name.",
+    "host_name": "github.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://support.metamask.io/configure/networks/how-to-add-a-custom-network-rpc",
+    "name": "How to add a custom network | MetaMask Help Center",
+    "snippet": "You can add multiple RPC URLs for a single network and edit the default RPC URL from your list of networks in both Extension and Mobile settings.",
+    "host_name": "support.metamask.io",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://ritual.net",
+    "name": "Ritual.net",
+    "snippet": "Ritual is building the infrastructure autonomous intelligence needs: native compute, privacy, verification, coordination, and markets for long-lived agents.",
+    "host_name": "ritual.net",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.ritualfoundation.org",
+    "name": "Ritual Chain Developer Documentation",
+    "snippet": "Developer documentation for Ritual Chain: precompiles, autonomous agents, chain architecture, deployment configs, and Symphony consensus.",
+    "host_name": "docs.ritualfoundation.org",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://ritual.net/blog/arbitrum",
+    "name": "Ritual × Arbitrum: Supercharging Ethereum With AI",
+    "snippet": "Through Ritual, developers on Arbitrum can power intelligent applications by accessing AI models directly on-chain. The Arbitrum Stack, Supercharged by Ritual.",
+    "host_name": "ritual.net",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/arcxteam/ritual-node",
+    "name": "Ritual AI A Comprehensive Guide Running Infernet Node · GitHub",
+    "snippet": "Create a new EVM-wallet at least equal $15-$30 of BASE ETH MAINNET · Replace the ENTER-BASE-MAINNET-URL → RPC URL · Replace the ENTER-BASE-MAINNET-URL → RPC URL ...",
+    "host_name": "github.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://x.com/ritualnet?lang=en",
+    "name": "Ritual (@ritualnet) / Posts / X - Twitter",
+    "snippet": "Ritual testnet is now live. The first chain where an agent's existence doesn't end when its creators do.",
+    "host_name": "x.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]
