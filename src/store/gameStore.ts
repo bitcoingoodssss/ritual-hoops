@@ -47,12 +47,15 @@ export type GamePhase = 'menu' | 'playing' | 'paused' | 'scored' | 'gameOver' | 
 
 export type GameAction = 'idle' | 'dribbling' | 'shooting' | 'dunking' | 'stealing' | 'defending' | 'celebrating' | 'fouled';
 
+import type { Lang } from '@/lib/i18n';
+
 interface GameState {
   // Player info
   twitterId: string;
   avatarUrl: string;
   playerName: string;
   playerStats: PlayerStats;
+  lang: Lang;
   
   // Game state
   phase: GamePhase;
@@ -117,6 +120,7 @@ interface GameState {
   getPlayerBonusStats: () => { speed: number; shoot: number; defense: number; dunk: number };
   addGameRecord: (record: GameRecord) => void;
   clearHistory: () => void;
+  setLang: (lang: Lang) => void;
 }
 
 const ALL_NFTS: NFTItem[] = [
@@ -167,6 +171,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   avatarUrl: '',
   playerName: '',
   playerStats: { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0 },
+  lang: 'en' as Lang,
   phase: 'menu',
   playerScore: 0,
   opponentScore: 0,
@@ -300,6 +305,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   addGameRecord: (record) => set((state) => ({ gameHistory: [record, ...state.gameHistory] })),
   clearHistory: () => set({ gameHistory: [] }),
+  setLang: (lang) => set({ lang }),
 }));
 
 export { ALL_NFTS };

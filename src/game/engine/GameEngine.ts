@@ -46,8 +46,8 @@ const SPRINT_MULTIPLIER = 1.4;
 const JUMP_FORCE = 8;
 const SHOOT_POWER_MAX = 18;
 const SHOOT_POWER_MIN = 8;
-const STEAL_RANGE = 2.0;
-const STEAL_COOLDOWN = 1.5;
+const STEAL_RANGE = 3.5;
+const STEAL_COOLDOWN = 1.0;
 const THREE_POINT_LINE = 6.75;
 const GAME_SCORE_LIMIT = 11;
 
@@ -103,6 +103,11 @@ export class GameEngine {
   onSteal: (() => void) | null = null;
   onAction: ((action: string) => void) | null = null;
   onGameOver: ((winner: 'player' | 'opponent') => void) | null = null;
+  onShootPower: ((power: number) => void) | null = null;
+  onContextHint: ((hint: string) => void) | null = null;
+  
+  // NFT bonus stats
+  playerBonus: { speed: number; shoot: number; defense: number; dunk: number } = { speed: 0, shoot: 0, defense: 0, dunk: 0 };
   
   // Avatar textures
   playerAvatarTexture: THREE.Texture | null = null;
@@ -231,9 +236,13 @@ export class GameEngine {
 
 
   private buildSky() {
-    const skyGeo = new THREE.SphereGeometry(100, 16, 16);
+    const skyGeo = new THREE.SphereGeometry(100, 32, 32);
+    const texture = new THREE.TextureLoader().load('/game-bg.jpg', undefined, undefined, () => {
+      // Fallback to solid color if image fails to load
+    });
+    texture.colorSpace = THREE.SRGBColorSpace;
     const skyMat = new THREE.MeshBasicMaterial({
-      color: 0x050510,
+      map: texture,
       side: THREE.BackSide,
     });
     this.scene.add(new THREE.Mesh(skyGeo, skyMat));
@@ -326,6 +335,10 @@ export class GameEngine {
     courtFloor.rotation.x = -Math.PI / 2;
     courtFloor.receiveShadow = true;
     this.court.add(courtFloor);
+
+    // === RITUAL TEXT ON COURT ===
+    this.addCourtText('RITUAL', 0, 0.015, 0, 8, 1.2, '#ffffff', 0.12);
+    this.addCourtText('HOOPS', 0, 0.015, 5, 8, 0.8, '#ffffff', 0.08);
 
     // === PLAYER SIDE INDICATORS ===
     // Player's half (positive Z) - orange tint
@@ -431,18 +444,18 @@ export class GameEngine {
     const arrowGroup = new THREE.Group();
     
     // Glowing arrow pointing to player's hoop (+Z direction)
-    const arrowGeo = new THREE.ConeGeometry(0.3, 1.5, 8);
-    const arrowMat = new THREE.MeshStandardMaterial({
+    const neonConeGeo = new THREE.ConeGeometry(0.3, 1.5, 8);
+    const neonConeMat = new THREE.MeshStandardMaterial({
       color: 0x00ffdd,
       emissive: 0x00ffdd,
       emissiveIntensity: 0.8,
       transparent: true,
       opacity: 0.8,
     });
-    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
-    arrow.position.set(0, 0.6, 8);
-    arrow.rotation.x = Math.PI; // Points +Z
-    arrowGroup.add(arrow);
+    const neonCone = new THREE.Mesh(neonConeGeo, neonConeMat);
+    neonCone.position.set(0, 0.6, 8);
+    neonCone.rotation.x = Math.PI; // Points +Z
+    arrowGroup.add(neonCone);
     
     // Text label "YOUR HOOP" using canvas texture
     const canvas = document.createElement('canvas');
@@ -539,9 +552,66 @@ export class GameEngine {
     parent.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffffff })));
   }
 
+  private addCourtText(text: string, cx: number, cy: number, cz: number, width: number, height: number, color: string, opacity: number) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = opacity;
+    ctx.font = 'bold 180px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 512, 128);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const geo = new THREE.PlaneGeometry(width, height);
+    const mat = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 1,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(cx, cy, cz);
+    this.court.add(mesh);
+  }
+
+  private updateContextHints() {
+    if (!this.onContextHint) return;
+
+    const hoopPos = this.hoopLeft.position;
+    const distToHoop = Math.sqrt(
+      Math.pow(this.player.position.x - hoopPos.x, 2) +
+      Math.pow(this.player.position.z - hoopPos.z, 2)
+    );
+    const distToOpp = this.player.position.distanceTo(this.opponent.position);
+
+    if (this.hasBall === 'player') {
+      if (distToHoop < 7) {
+        this.onContextHint('dunk');
+      } else if (distToHoop < 14) {
+        this.onContextHint('shoot');
+      } else {
+        this.onContextHint('move');
+      }
+    } else if (this.hasBall === 'opponent') {
+      if (distToOpp < 4) {
+        this.onContextHint('steal');
+      } else {
+        this.onContextHint('steal_far');
+      }
+    } else {
+      this.onContextHint('none');
+    }
+  }
+
   private buildHoop(pos: THREE.Vector3): THREE.Group {
     const hoop = new THREE.Group();
-    
+
     // Backboard
     const backboardGeo = new THREE.BoxGeometry(1.8, 1.2, 0.05);
     const backboardMat = new THREE.MeshStandardMaterial({
@@ -1054,6 +1124,7 @@ export class GameEngine {
     if (!this.player.isShooting) return;
     this.isShootingHold = false;
     this.player.isShooting = false;
+    this.onShootPower?.(0);
     
     // Calculate direction to opponent's hoop
     const targetPos = this.hoopLeft.position.clone();
@@ -1092,7 +1163,7 @@ export class GameEngine {
     const dx = Math.abs(this.player.position.x - hoopPos.x);
     const dz = Math.abs(this.player.position.z - hoopPos.z);
     
-    if (dz < 5 && dx < 3) {
+    if (dz < 7 && dx < 4) {
       this.player.isDunking = true;
       this.player.isJumping = true;
       this.player.jumpVelocity = JUMP_FORCE * 1.3;
@@ -1107,7 +1178,7 @@ export class GameEngine {
     if (by === 'player' && this.hasBall === 'opponent') {
       const dist = this.player.position.distanceTo(this.opponent.position);
       if (dist < STEAL_RANGE) {
-        if (Math.random() < 0.35) {
+        if (Math.random() < 0.55) {
           this.hasBall = 'player';
           this.ball.owner = 'player';
           this.stealCooldown = STEAL_COOLDOWN;
@@ -1242,7 +1313,7 @@ export class GameEngine {
       moveX /= len;
       moveZ /= len;
       
-      const speed = MOVE_SPEED * (this.keys.has('Sprint') ? SPRINT_MULTIPLIER : 1);
+      const speed = MOVE_SPEED * (this.keys.has('Sprint') ? SPRINT_MULTIPLIER : 1) * (1 + this.playerBonus.speed * 0.04);
       this.player.position.x += moveX * speed * dt;
       this.player.position.z += moveZ * speed * dt;
       
@@ -1292,6 +1363,8 @@ export class GameEngine {
     // Shot power charge
     if (this.isShootingHold) {
       this.shootPower = Math.min(SHOOT_POWER_MAX, this.shootPower + dt * 20);
+      const pct = (this.shootPower - SHOOT_POWER_MIN) / (SHOOT_POWER_MAX - SHOOT_POWER_MIN);
+      this.onShootPower?.(Math.min(1, Math.max(0, pct)));
     }
     
     // Ball physics
@@ -1312,7 +1385,7 @@ export class GameEngine {
         this.ball.velocity.z *= 0.8;
         
         // If ball is slow enough and on ground, it's a rebound
-        if (this.ball.velocity.length() < 1) {
+        if (this.ball.velocity.length() < 2.5) {
           this.ball.isAirborne = false;
           // Who picks it up?
           const distToPlayer = this.ball.position.distanceTo(this.player.position);
@@ -1378,10 +1451,10 @@ export class GameEngine {
     const dz = this.ball.position.z - hL.position.z;
     const distXZ = Math.sqrt(dx * dx + dz * dz);
     
-    if (distXZ < hL.rimRadius * 0.8 && 
-        this.ball.position.y < hL.position.y + 0.3 &&
-        this.ball.position.y > hL.position.y - 0.5 &&
-        this.ball.velocity.y < 0) {
+    if (distXZ < hL.rimRadius * 1.2 && 
+        this.ball.position.y < hL.position.y + 0.5 &&
+        this.ball.position.y > hL.position.y - 0.8 &&
+        this.ball.velocity.y < 0.5) {
       // Score for player!
       const distFromHoop = Math.sqrt(
         Math.pow(this.player.position.x - hL.position.x, 2) +
@@ -1412,10 +1485,10 @@ export class GameEngine {
     const dz2 = this.ball.position.z - hR.position.z;
     const distXZ2 = Math.sqrt(dx2 * dx2 + dz2 * dz2);
     
-    if (distXZ2 < hR.rimRadius * 0.8 && 
-        this.ball.position.y < hR.position.y + 0.3 &&
-        this.ball.position.y > hR.position.y - 0.5 &&
-        this.ball.velocity.y < 0) {
+    if (distXZ2 < hR.rimRadius * 1.2 && 
+        this.ball.position.y < hR.position.y + 0.5 &&
+        this.ball.position.y > hR.position.y - 0.8 &&
+        this.ball.velocity.y < 0.5) {
       // Score for opponent
       this.opponentScore += 2;
       this.hasBall = 'player';
@@ -1662,6 +1735,7 @@ export class GameEngine {
     this.updateOpponentAI(dt);
     this.updateAnimations(dt);
     this.updateParticles(dt);
+    this.updateContextHints();
     this.updateCamera();
     
     // Dynamic lighting
@@ -1726,6 +1800,10 @@ export class GameEngine {
   setDifficulty(difficulty: number) {
     // Adjust opponent behavior based on difficulty (0-1)
     // Higher difficulty = faster, better shooting
+  }
+
+  setPlayerBonus(bonus: { speed: number; shoot: number; defense: number; dunk: number }) {
+    this.playerBonus = bonus;
   }
 
   getScores() {

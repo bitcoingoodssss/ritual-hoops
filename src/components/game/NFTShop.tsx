@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useGameStore, ALL_NFTS } from '@/store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { t } from '@/lib/i18n';
 
 function StatBlock({ label, value, color }: { label: string; value: number; color: string }) {
   const maxVal = 10;
@@ -27,7 +28,7 @@ function StatBlock({ label, value, color }: { label: string; value: number; colo
 }
 
 export default function NFTShop({ onBack }: { onBack: () => void }) {
-  const { ownedNFTs, equippedNFTs, walletConnected, walletAddress, equipNFT, unequipNFT, addOwnedNFT, ritualBalance, gameHistory } = useGameStore();
+  const { ownedNFTs, equippedNFTs, walletConnected, walletAddress, equipNFT, unequipNFT, addOwnedNFT, ritualBalance, gameHistory, lang, setLang } = useGameStore();
   const [selectedType, setSelectedType] = useState<string>('all');
   const [minting, setMinting] = useState<string | null>(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
@@ -94,13 +95,17 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            Back
+            {t('shop.back', lang)}
           </button>
           <div className="flex gap-1 bg-gray-900 rounded-lg p-1">
-            <button onClick={() => setTab('shop')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${tab === 'shop' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-white'}`}>🛒 Shop</button>
-            <button onClick={() => setTab('history')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${tab === 'history' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-white'}`}>📊 History</button>
+            <button onClick={() => setTab('shop')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${tab === 'shop' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-white'}`}>{t('shop.tabShop', lang)}</button>
+            <button onClick={() => setTab('history')} className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${tab === 'history' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-white'}`}>{t('shop.tabHistory', lang)}</button>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
+              className="bg-black/60 backdrop-blur rounded-lg px-2.5 py-1 border border-gray-600/50 text-gray-400 hover:text-white text-xs font-bold">
+              {lang === 'en' ? '中文' : 'EN'}
+            </button>
             {walletConnected && <span className="text-xs text-green-400 bg-green-900/30 px-2 py-1 rounded-full">{walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</span>}
             <span className="text-xs text-yellow-400 bg-yellow-900/30 px-2 py-1 rounded-full font-bold">{ritualBalance} RTUAL</span>
           </div>
@@ -112,7 +117,7 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
           <>
             {/* Equipped Items */}
             <div className="mb-8">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Equipped Gear</h3>
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">{t('shop.equippedGear', lang)}</h3>
               <div className="grid grid-cols-4 gap-3">
                 {(['jersey', 'shoes', 'headband', 'accessory'] as const).map(slot => {
                   const item = equippedNFTs[slot];
@@ -120,8 +125,8 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
                   return (
                     <div key={slot} className={`rounded-xl p-3 border text-center transition-all ${item ? `${rc!.border} ${rc!.bg}` : 'border-gray-700/50 bg-gray-900/30'}`}>
                       <div className="text-3xl mb-1">{item ? getNFTIcon(slot) : '➕'}</div>
-                      <div className={`text-[11px] font-bold ${item ? rc!.text : 'text-gray-600'}`}>{item ? item.name : `No ${getNFTLabel(slot)}`}</div>
-                      {item && <button onClick={() => unequipNFT(slot)} className="text-[10px] text-red-400 hover:text-red-300 mt-1">Remove</button>}
+                      <div className={`text-[11px] font-bold ${item ? rc!.text : 'text-gray-600'}`}>{item ? item.name : `${t('shop.noItem', lang)} ${getNFTLabel(slot)}`}</div>
+                      {item && <button onClick={() => unequipNFT(slot)} className="text-[10px] text-red-400 hover:text-red-300 mt-1">{t('shop.remove', lang)}</button>}
                     </div>
                   );
                 })}
@@ -133,7 +138,7 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
               {types.map(type => (
                 <button key={type} onClick={() => setSelectedType(type)}
                   className={`px-5 py-2 rounded-full text-xs font-bold uppercase transition-all whitespace-nowrap ${selectedType === type ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-                  {type === 'all' ? '📦 All' : `${getNFTIcon(type)} ${getNFTLabel(type)}`}
+                  {type === 'all' ? t('shop.all', lang) : `${getNFTIcon(type)} ${getNFTLabel(type)}`}
                 </button>
               ))}
             </div>

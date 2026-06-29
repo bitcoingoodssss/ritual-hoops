@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useGameStore, ALL_NFTS } from '@/store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { t } from '@/lib/i18n';
 
 function WalletConnectModal({ onClose }: { onClose: () => void }) {
-  const { setWalletAddress, setWalletConnected, setRitualBalance } = useGameStore();
+  const { setWalletAddress, setWalletConnected, setRitualBalance, lang } = useGameStore();
   const [connecting, setConnecting] = useState(false);
 
   const connectWallet = async (walletType: string) => {
@@ -33,8 +34,8 @@ function WalletConnectModal({ onClose }: { onClose: () => void }) {
         animate={{ scale: 1, y: 0 }}
         className="bg-gray-900 rounded-2xl p-6 max-w-sm w-full mx-4 border border-cyan-500/30 shadow-2xl shadow-cyan-500/10"
       >
-        <h3 className="text-lg font-bold text-white mb-1">Connect Wallet</h3>
-        <p className="text-sm text-gray-400 mb-5">Connect your wallet on Ritual Chain to mint NFTs</p>
+        <h3 className="text-lg font-bold text-white mb-1">{t('wallet.connectTitle', lang)}</h3>
+        <p className="text-sm text-gray-400 mb-5">{t('wallet.connectDesc', lang)}</p>
         <div className="space-y-3">
           {[
             { name: 'MetaMask', icon: '🦊' },
@@ -57,7 +58,7 @@ function WalletConnectModal({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <button onClick={onClose} className="w-full mt-4 py-2 text-gray-400 text-sm hover:text-white transition-colors">
-          Cancel
+          {t('wallet.cancel', lang)}
         </button>
       </motion.div>
     </motion.div>
@@ -65,7 +66,7 @@ function WalletConnectModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: () => void; onOpenShop: () => void }) {
-  const { twitterId, setTwitterId, setAvatarUrl, setPlayerName, walletConnected, avatarUrl } = useGameStore();
+  const { twitterId, setTwitterId, setAvatarUrl, setPlayerName, walletConnected, avatarUrl, lang, setLang } = useGameStore();
   const [inputId, setInputId] = useState(twitterId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -73,7 +74,7 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
 
   const handleSubmit = async () => {
     if (!inputId.trim()) {
-      setError('Please enter your Twitter ID');
+      setError(t('menu.enterTwitter', lang));
       return;
     }
     
@@ -90,7 +91,7 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
         setPlayerName(inputId.trim().replace('@', ''));
         onEnterGame();
       } else {
-        setError('Could not load avatar. Please try again.');
+        setError(t('menu.errorAvatar', lang));
       }
     } catch {
       // Fallback - still allow entry
@@ -106,6 +107,13 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
 
   return (
     <div className="relative w-full h-screen flex items-center justify-center overflow-hidden">
+      {/* Lang Toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
+          className="bg-black/60 backdrop-blur rounded-lg px-2.5 py-1 border border-gray-600/50 text-gray-400 hover:text-white text-xs font-bold">
+          {lang === 'en' ? '中文' : 'EN'}
+        </button>
+      </div>
       {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -152,11 +160,11 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
             RITUAL HOOPS
           </h1>
           <p className="text-gray-400 text-sm tracking-widest uppercase">
-            Chain Basketball Championship
+            {t('menu.subtitle', lang)}
           </p>
           <div className="flex items-center justify-center gap-2 mt-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-green-400 text-xs font-bold">LIVE ON RITUAL CHAIN</span>
+            <span className="text-green-400 text-xs font-bold">{t('menu.live', lang)}</span>
           </div>
         </motion.div>
 
@@ -168,7 +176,7 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
           className="w-full bg-gray-900/60 backdrop-blur-xl rounded-2xl p-6 border border-gray-700/50 mb-4"
         >
           <label className="block text-sm font-bold text-gray-300 mb-2">
-            Enter Your Twitter ID
+            {t('menu.enterTwitter', lang)}
           </label>
           <div className="flex gap-3">
             <div className="flex-1 relative">
@@ -178,7 +186,7 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
                 value={inputId}
                 onChange={(e) => setInputId(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                placeholder="your_twitter_handle"
+                placeholder={t('menu.placeholder', lang)}
                 className="w-full bg-black/50 border border-gray-600 rounded-xl pl-8 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all"
               />
             </div>
@@ -193,9 +201,9 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Loading
+                  {t('menu.loading', lang)}
                 </span>
-              ) : 'PLAY'}
+              ) : t('menu.play', lang)}
             </button>
           </div>
           {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
@@ -204,7 +212,7 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
           {avatarUrl && (
             <div className="mt-4 flex items-center gap-3">
               <img src={avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-orange-500" />
-              <span className="text-gray-300 text-sm">Playing as <strong className="text-orange-400">{inputId.replace('@', '')}</strong></span>
+              <span className="text-gray-300 text-sm">{t('menu.avatarPreview', lang)} <strong className="text-orange-400">{inputId.replace('@', '')}</strong>{lang === 'zh' ? t('menu.avatarPreviewEnd', lang) : ''}</span>
             </div>
           )}
         </motion.div>
@@ -219,20 +227,20 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
           <div className="flex items-center gap-4 text-sm">
             <div className="flex-1 text-center">
               <div className="text-2xl mb-1">🏆</div>
-              <div className="text-gray-400">5 Rounds</div>
-              <div className="text-gray-500 text-xs">Tournament</div>
+              <div className="text-gray-400">{t('menu.rounds', lang)}</div>
+              <div className="text-gray-500 text-xs">{t('menu.tournament', lang)}</div>
             </div>
             <div className="w-px h-12 bg-gray-700" />
             <div className="flex-1 text-center">
               <div className="text-2xl mb-1">⚔️</div>
               <div className="text-gray-400">1v1</div>
-              <div className="text-gray-500 text-xs">Basketball</div>
+              <div className="text-gray-500 text-xs">{t('menu.basketball', lang)}</div>
             </div>
             <div className="w-px h-12 bg-gray-700" />
             <div className="flex-1 text-center">
               <div className="text-2xl mb-1">💎</div>
               <div className="text-gray-400">NFTs</div>
-              <div className="text-gray-500 text-xs">Power Up</div>
+              <div className="text-gray-500 text-xs">{t('menu.powerUp', lang)}</div>
             </div>
           </div>
         </motion.div>
@@ -248,7 +256,7 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
             onClick={onOpenShop}
             className="flex-1 py-3 bg-gray-800/60 border border-purple-500/30 text-purple-300 font-bold rounded-xl hover:bg-purple-900/40 transition-all"
           >
-            🛒 NFT Shop
+            {t('menu.nftShop', lang)}
           </button>
           <button
             onClick={() => setShowWallet(true)}
@@ -258,14 +266,14 @@ export default function StartScreen({ onEnterGame, onOpenShop }: { onEnterGame: 
                 : 'bg-gray-800/60 border-cyan-500/30 text-cyan-300 hover:bg-cyan-900/40'
             }`}
           >
-            {walletConnected ? '✅ Wallet Connected' : '🔗 Connect Wallet'}
+            {walletConnected ? t('menu.walletConnected', lang) : t('menu.connectWallet', lang)}
           </button>
         </motion.div>
 
         {/* Chain info */}
         <div className="mt-6 text-center text-xs text-gray-600">
-          <p>Powered by Ritual Network</p>
-          <p className="mt-1">First to 11 points wins • 3 min per game</p>
+          <p>{t('menu.poweredBy', lang)}</p>
+          <p className="mt-1">{t('menu.gameRule', lang)}</p>
         </div>
       </div>
 
