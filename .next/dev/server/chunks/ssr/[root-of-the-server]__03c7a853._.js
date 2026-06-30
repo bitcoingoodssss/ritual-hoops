@@ -3954,7 +3954,7 @@ function TournamentWinOverlay({ onRestart }) {
 "[project]/src/lib/ritualWallet.ts [app-ssr] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-// Ritual Chain Configuration
+// Ritual Chain Configuration (from docs.ritualfoundation.org)
 __turbopack_context__.s([
     "RITUAL_CHAIN",
     ()=>RITUAL_CHAIN,
@@ -3971,35 +3971,51 @@ __turbopack_context__.s([
     "onChainChanged",
     ()=>onChainChanged,
     "shortenAddress",
-    ()=>shortenAddress,
-    "signMessage",
-    ()=>signMessage
+    ()=>shortenAddress
 ]);
 const RITUAL_CHAIN = {
-    chainId: '0x393',
-    chainName: 'Ritual Mainnet',
+    chainId: '0x7BB',
+    chainName: 'Ritual',
     nativeCurrency: {
-        name: 'Ethereum',
-        symbol: 'ETH',
+        name: 'Ritual',
+        symbol: 'RITUAL',
         decimals: 18
     },
     rpcUrls: [
-        'https://rpc.ritual.net'
+        'https://rpc.ritualfoundation.org'
     ],
     blockExplorerUrls: [
-        'https://explorer.ritual.net'
+        'https://explorer.ritualfoundation.org'
     ]
 };
+/**
+ * Get the real MetaMask provider even when Binance Wallet overrides window.ethereum.
+ * Binance Wallet sets window.ethereum but the real MetaMask is in the providers array.
+ */ function getMetaMaskProvider() {
+    const w = window;
+    const ethereum = w.ethereum;
+    if (!ethereum) return null;
+    // If there's a providers array, find MetaMask specifically
+    if (ethereum.providers && ethereum.providers.length > 0) {
+        const metaMask = ethereum.providers.find((p)=>p.isMetaMask);
+        if (metaMask) return metaMask;
+    }
+    // No providers array — if the current one is MetaMask (and not Binance), use it
+    if (ethereum.isMetaMask && !ethereum.isBinance) {
+        return ethereum;
+    }
+    return null;
+}
 function hasMetaMask() {
-    return ("TURBOPACK compile-time value", "undefined") !== 'undefined' && !!window.ethereum?.isMetaMask;
+    return ("TURBOPACK compile-time value", "undefined") !== 'undefined' && getMetaMaskProvider() !== null;
 }
 async function connectRitualWallet() {
-    const ethereum = window.ethereum;
-    if (!ethereum) {
-        throw new Error('MetaMask not installed');
+    const provider = getMetaMaskProvider();
+    if (!provider) {
+        throw new Error(("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : 'MetaMask not installed');
     }
-    // Request accounts
-    const accounts = await ethereum.request({
+    // Request accounts from the real MetaMask
+    const accounts = await provider.request({
         method: 'eth_requestAccounts'
     });
     if (!accounts || accounts.length === 0) {
@@ -4008,7 +4024,7 @@ async function connectRitualWallet() {
     const address = accounts[0];
     // Try to switch to Ritual chain, if fails then add it
     try {
-        await ethereum.request({
+        await provider.request({
             method: 'wallet_switchEthereumChain',
             params: [
                 {
@@ -4018,9 +4034,9 @@ async function connectRitualWallet() {
         });
     } catch (switchError) {
         const err = switchError;
-        // Chain not added yet, add it
+        // Chain not added yet — add it
         if (err.code === 4902) {
-            await ethereum.request({
+            await provider.request({
                 method: 'wallet_addEthereumChain',
                 params: [
                     RITUAL_CHAIN
@@ -4030,7 +4046,7 @@ async function connectRitualWallet() {
             throw switchError;
         }
     }
-    const chainId = await ethereum.request({
+    const chainId = await provider.request({
         method: 'eth_chainId'
     });
     return {
@@ -4039,41 +4055,28 @@ async function connectRitualWallet() {
     };
 }
 async function getRitualBalance(address) {
-    const ethereum = window.ethereum;
-    if (!ethereum) return '0';
-    const balance = await ethereum.request({
+    const provider = getMetaMaskProvider();
+    if (!provider) return '0';
+    const balance = await provider.request({
         method: 'eth_getBalance',
         params: [
             address,
             'latest'
         ]
     });
-    // Convert from hex wei to ETH
+    // Convert from hex wei to RITUAL
     const wei = parseInt(balance, 16);
     return (wei / 1e18).toFixed(4);
 }
-async function signMessage(message) {
-    const ethereum = window.ethereum;
-    if (!ethereum) throw new Error('No wallet');
-    const accounts = await ethereum.request({
-        method: 'eth_accounts'
-    });
-    if (!accounts || accounts.length === 0) throw new Error('No accounts');
-    return await ethereum.request({
-        method: 'personal_sign',
-        params: [
-            message,
-            accounts[0]
-        ]
-    });
-}
 function onAccountsChanged(callback) {
-    window.ethereum?.on('accountsChanged', callback);
-    return ()=>window.ethereum?.removeListener('accountsChanged', callback);
+    const provider = getMetaMaskProvider();
+    provider?.on('accountsChanged', callback);
+    return ()=>provider?.removeListener('accountsChanged', callback);
 }
 function onChainChanged(callback) {
-    window.ethereum?.on('chainChanged', callback);
-    return ()=>window.ethereum?.removeListener('chainChanged', callback);
+    const provider = getMetaMaskProvider();
+    provider?.on('chainChanged', callback);
+    return ()=>provider?.removeListener('chainChanged', callback);
 }
 function isRitualChain(chainId) {
     return chainId.toLowerCase() === RITUAL_CHAIN.chainId.toLowerCase();
@@ -4126,7 +4129,7 @@ function WalletConnectModal({ onClose }) {
             // Get real balance
             try {
                 const bal = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ritualWallet$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getRitualBalance"])(address);
-                setRitualBalance(parseFloat(bal) * 1000); // Display as mETH for game
+                setRitualBalance(parseFloat(bal));
             } catch  {
                 setRitualBalance(0);
             }
@@ -4895,10 +4898,176 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ritualWallet$2
 ;
 ;
 ;
-function StatBlock({ label, value, color }) {
-    const maxVal = 10;
-    const pct = Math.min(100, value / maxVal * 100);
-    const colors = {
+/* ── type-specific visual config ── */ const TYPE_VISUAL = {
+    jersey: {
+        icon: '\uD83D\uDC55',
+        label: 'JERSEY',
+        shape: 'hex',
+        accent: 'from-orange-500 via-red-500 to-rose-600',
+        badgeBg: 'bg-orange-500/20',
+        ring: 'ring-orange-500/40',
+        textColor: 'text-orange-400'
+    },
+    shoes: {
+        icon: '\uD83D\uDC5F',
+        label: 'SHOES',
+        shape: 'diamond',
+        accent: 'from-emerald-400 via-cyan-500 to-blue-600',
+        badgeBg: 'bg-emerald-500/20',
+        ring: 'ring-emerald-500/40',
+        textColor: 'text-emerald-400'
+    },
+    headband: {
+        icon: '\uD83C\uDFAF',
+        label: 'HEADBAND',
+        shape: 'circle',
+        accent: 'from-violet-500 via-purple-500 to-fuchsia-600',
+        badgeBg: 'bg-violet-500/20',
+        ring: 'ring-violet-500/40',
+        textColor: 'text-violet-400'
+    },
+    accessory: {
+        icon: '\uD83D\uDCAA',
+        label: 'ACCESSORY',
+        shape: 'shield',
+        accent: 'from-amber-400 via-yellow-500 to-orange-500',
+        badgeBg: 'bg-amber-500/20',
+        ring: 'ring-amber-500/40',
+        textColor: 'text-amber-400'
+    }
+};
+const RARITY_CFG = {
+    common: {
+        border: 'border-gray-500/60',
+        glow: '',
+        label: '\u26AA COMMON'
+    },
+    rare: {
+        border: 'border-blue-500/50',
+        glow: 'shadow-blue-500/25 shadow-lg',
+        label: '\uD83D\uDD35 RARE'
+    },
+    epic: {
+        border: 'border-purple-500/50',
+        glow: 'shadow-purple-500/25 shadow-lg',
+        label: '\uD83D\uDFE3 EPIC'
+    },
+    legendary: {
+        border: 'border-yellow-400/60',
+        glow: 'shadow-yellow-400/30 shadow-xl',
+        label: '\uD83D\uDFE1 LEGENDARY'
+    }
+};
+/* ── Shape SVG ── */ function ShapeIcon({ type, size = 72 }) {
+    const v = TYPE_VISUAL[type];
+    if (!v) return null;
+    const s = size;
+    const h = s / 2;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+        width: s,
+        height: s,
+        viewBox: `0 0 ${s} ${s}`,
+        className: "drop-shadow-lg",
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("defs", {
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("linearGradient", {
+                    id: `sg-${type}`,
+                    x1: "0%",
+                    y1: "0%",
+                    x2: "100%",
+                    y2: "100%",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                            offset: "0%",
+                            stopColor: "#f97316"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/game/NFTShop.tsx",
+                            lineNumber: 59,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("stop", {
+                            offset: "100%",
+                            stopColor: "#ec4899"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/game/NFTShop.tsx",
+                            lineNumber: 60,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/src/components/game/NFTShop.tsx",
+                    lineNumber: 58,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/src/components/game/NFTShop.tsx",
+                lineNumber: 57,
+                columnNumber: 7
+            }, this),
+            v.shape === 'circle' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("circle", {
+                cx: h,
+                cy: h,
+                r: s * 0.44,
+                fill: `url(#sg-${type})`,
+                fillOpacity: 0.12,
+                stroke: `url(#sg-${type})`,
+                strokeWidth: 2
+            }, void 0, false, {
+                fileName: "[project]/src/components/game/NFTShop.tsx",
+                lineNumber: 64,
+                columnNumber: 9
+            }, this) : v.shape === 'hex' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("polygon", {
+                points: `${h},${s * 0.06} ${s * 0.94},${h * 0.66} ${s * 0.94},${s - h * 0.66} ${h},${s * 0.94} ${s * 0.06},${s - h * 0.66} ${s * 0.06},${h * 0.66}`,
+                fill: `url(#sg-${type})`,
+                fillOpacity: 0.12,
+                stroke: `url(#sg-${type})`,
+                strokeWidth: 2
+            }, void 0, false, {
+                fileName: "[project]/src/components/game/NFTShop.tsx",
+                lineNumber: 66,
+                columnNumber: 9
+            }, this) : v.shape === 'diamond' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("polygon", {
+                points: `${h},4 ${s - 4},${h} ${h},${s - 4} 4,${h}`,
+                fill: `url(#sg-${type})`,
+                fillOpacity: 0.12,
+                stroke: `url(#sg-${type})`,
+                strokeWidth: 2
+            }, void 0, false, {
+                fileName: "[project]/src/components/game/NFTShop.tsx",
+                lineNumber: 68,
+                columnNumber: 9
+            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                d: `M${h},4 L${s - 6},${s * 0.25} L${s - 6},${h} Q${s - 6},${s - 4} ${h},${s - 4} Q6,${s - 4} 6,${h} L6,${s * 0.25} Z`,
+                fill: `url(#sg-${type})`,
+                fillOpacity: 0.12,
+                stroke: `url(#sg-${type})`,
+                strokeWidth: 2
+            }, void 0, false, {
+                fileName: "[project]/src/components/game/NFTShop.tsx",
+                lineNumber: 70,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("text", {
+                x: h,
+                y: h + 8,
+                textAnchor: "middle",
+                fontSize: s * 0.38,
+                children: v.icon
+            }, void 0, false, {
+                fileName: "[project]/src/components/game/NFTShop.tsx",
+                lineNumber: 72,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/src/components/game/NFTShop.tsx",
+        lineNumber: 56,
+        columnNumber: 5
+    }, this);
+}
+/* ── stat bar ── */ function StatBlock({ label, value, color }) {
+    const pct = Math.min(100, value / 10 * 100);
+    const c = {
         green: 'bg-green-500',
         yellow: 'bg-yellow-500',
         blue: 'bg-blue-500',
@@ -4914,8 +5083,8 @@ function StatBlock({ label, value, color }) {
                         children: label
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                        lineNumber: 21,
-                        columnNumber: 9
+                        lineNumber: 83,
+                        columnNumber: 58
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "text-white font-bold",
@@ -4925,36 +5094,36 @@ function StatBlock({ label, value, color }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                        lineNumber: 22,
-                        columnNumber: 9
+                        lineNumber: 83,
+                        columnNumber: 104
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 20,
+                lineNumber: 83,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "h-2.5 bg-gray-800 rounded-full overflow-hidden",
+                className: "h-2 bg-gray-800 rounded-full overflow-hidden",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: `h-full ${colors[color]} rounded-full transition-all`,
+                    className: `h-full ${c[color]} rounded-full transition-all`,
                     style: {
                         width: `${pct}%`
                     }
                 }, void 0, false, {
                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                    lineNumber: 25,
-                    columnNumber: 9
+                    lineNumber: 84,
+                    columnNumber: 69
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 24,
+                lineNumber: 84,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/game/NFTShop.tsx",
-        lineNumber: 19,
+        lineNumber: 82,
         columnNumber: 5
     }, this);
 }
@@ -4972,47 +5141,17 @@ function NFTShop({ onBack }) {
         'accessory'
     ];
     const filteredNFTs = selectedType === 'all' ? __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ALL_NFTS"] : __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ALL_NFTS"].filter((n)=>n.type === selectedType);
-    const rarityConfig = {
-        common: {
-            border: 'border-gray-500/60',
-            bg: 'bg-gray-900/60',
-            text: 'text-gray-300',
-            headerBg: 'bg-gradient-to-br from-gray-700/80 to-gray-800/80',
-            glow: ''
-        },
-        rare: {
-            border: 'border-blue-500/50',
-            bg: 'bg-blue-950/30',
-            text: 'text-blue-300',
-            headerBg: 'bg-gradient-to-br from-blue-900/70 to-cyan-900/50',
-            glow: 'shadow-blue-500/20 shadow-lg'
-        },
-        epic: {
-            border: 'border-purple-500/50',
-            bg: 'bg-purple-950/30',
-            text: 'text-purple-300',
-            headerBg: 'bg-gradient-to-br from-purple-900/70 to-pink-900/50',
-            glow: 'shadow-purple-500/20 shadow-lg'
-        },
-        legendary: {
-            border: 'border-yellow-500/50',
-            bg: 'bg-yellow-950/20',
-            text: 'text-yellow-300',
-            headerBg: 'bg-gradient-to-br from-yellow-900/70 to-amber-800/50',
-            glow: 'shadow-yellow-500/30 shadow-xl'
-        }
-    };
     const handleMint = async (nftId, price)=>{
         if (!walletConnected) {
             setShowWalletModal(true);
             return;
         }
         if (__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"].getState().ritualBalance < price) {
-            alert(lang === 'zh' ? 'RTUAL余额不足！' : 'Insufficient RTUAL balance!');
+            alert(lang === 'zh' ? 'RITUAL余额不足！' : 'Insufficient RITUAL balance!');
             return;
         }
         setMinting(nftId);
-        await new Promise((resolve)=>setTimeout(resolve, 2000));
+        await new Promise((r)=>setTimeout(r, 2000));
         const nft = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ALL_NFTS"].find((n)=>n.id === nftId);
         if (nft) {
             addOwnedNFT(nft);
@@ -5022,50 +5161,8 @@ function NFTShop({ onBack }) {
         }
         setMinting(null);
     };
-    const isOwned = (nftId)=>ownedNFTs.some((n)=>n.id === nftId);
-    const isEquipped = (nftId)=>Object.values(equippedNFTs).some((n)=>n?.id === nftId);
-    const getRarityIcon = (rarity)=>{
-        switch(rarity){
-            case 'common':
-                return '⚪';
-            case 'rare':
-                return '🔵';
-            case 'epic':
-                return '🟣';
-            case 'legendary':
-                return '🟡';
-            default:
-                return '⚪';
-        }
-    };
-    const getNFTIcon = (type, _rarity)=>{
-        switch(type){
-            case 'jersey':
-                return '👕';
-            case 'shoes':
-                return '👟';
-            case 'headband':
-                return '🎯';
-            case 'accessory':
-                return '💪';
-            default:
-                return '📦';
-        }
-    };
-    const getNFTLabel = (type)=>{
-        switch(type){
-            case 'jersey':
-                return 'JERSEY';
-            case 'shoes':
-                return 'SHOES';
-            case 'headband':
-                return 'HEADBAND';
-            case 'accessory':
-                return 'ACCESSORY';
-            default:
-                return 'ITEM';
-        }
-    };
+    const isOwned = (id)=>ownedNFTs.some((n)=>n.id === id);
+    const isEquipped = (id)=>Object.values(equippedNFTs).some((n)=>n?.id === id);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "relative w-full h-screen overflow-y-auto",
         style: {
@@ -5088,17 +5185,17 @@ function NFTShop({ onBack }) {
                         onClose: ()=>setShowWalletModal(false)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                        lineNumber: 99,
-                        columnNumber: 13
+                        lineNumber: 114,
+                        columnNumber: 204
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                    lineNumber: 98,
-                    columnNumber: 11
+                    lineNumber: 114,
+                    columnNumber: 44
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 96,
+                lineNumber: 114,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5122,19 +5219,19 @@ function NFTShop({ onBack }) {
                                         d: "M15 19l-7-7 7-7"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                        lineNumber: 108,
+                                        lineNumber: 119,
                                         columnNumber: 92
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 108,
+                                    lineNumber: 119,
                                     columnNumber: 13
                                 }, this),
                                 (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.back', lang)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 107,
+                            lineNumber: 118,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5146,7 +5243,7 @@ function NFTShop({ onBack }) {
                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.tabShop', lang)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 112,
+                                    lineNumber: 123,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5155,13 +5252,13 @@ function NFTShop({ onBack }) {
                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.tabHistory', lang)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 113,
+                                    lineNumber: 124,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 111,
+                            lineNumber: 122,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5173,7 +5270,7 @@ function NFTShop({ onBack }) {
                                     children: lang === 'en' ? '中文' : 'EN'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 116,
+                                    lineNumber: 127,
                                     columnNumber: 13
                                 }, this),
                                 walletConnected && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5185,35 +5282,35 @@ function NFTShop({ onBack }) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 120,
+                                    lineNumber: 128,
                                     columnNumber: 33
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     className: "text-xs text-yellow-400 bg-yellow-900/30 px-2 py-1 rounded-full font-bold",
                                     children: [
-                                        ritualBalance,
-                                        " RTUAL"
+                                        ritualBalance.toFixed(2),
+                                        " RITUAL"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 121,
+                                    lineNumber: 129,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 115,
+                            lineNumber: 126,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                    lineNumber: 106,
+                    lineNumber: 117,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 105,
+                lineNumber: 116,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5228,8 +5325,8 @@ function NFTShop({ onBack }) {
                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.equippedGear', lang)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 131,
-                                    columnNumber: 15
+                                    lineNumber: 138,
+                                    columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "grid grid-cols-4 gap-3",
@@ -5240,25 +5337,25 @@ function NFTShop({ onBack }) {
                                         'accessory'
                                     ].map((slot)=>{
                                         const item = equippedNFTs[slot];
-                                        const rc = item ? rarityConfig[item.rarity] : null;
+                                        const tv = TYPE_VISUAL[slot];
                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: `rounded-xl p-3 border text-center transition-all ${item ? `${rc.border} ${rc.bg}` : 'border-gray-700/50 bg-gray-900/30'}`,
+                                            className: `rounded-xl p-3 border text-center transition-all ring-1 ${item ? `${tv.ring} ${tv.badgeBg}` : 'border-gray-700/50 bg-gray-900/30 ring-gray-700/30'}`,
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "text-3xl mb-1",
-                                                    children: item ? getNFTIcon(slot) : '➕'
+                                                    children: item ? tv.icon : '+'
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 138,
-                                                    columnNumber: 23
+                                                    lineNumber: 144,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: `text-[11px] font-bold ${item ? rc.text : 'text-gray-600'}`,
-                                                    children: item ? item.name : `${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.noItem', lang)} ${getNFTLabel(slot)}`
+                                                    className: `text-[11px] font-bold ${item ? 'text-white' : 'text-gray-600'}`,
+                                                    children: item ? item.name : `${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.noItem', lang)} ${tv.label}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 139,
-                                                    columnNumber: 23
+                                                    lineNumber: 145,
+                                                    columnNumber: 21
                                                 }, this),
                                                 item && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                     onClick: ()=>unequipNFT(slot),
@@ -5266,49 +5363,54 @@ function NFTShop({ onBack }) {
                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.remove', lang)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 140,
-                                                    columnNumber: 32
+                                                    lineNumber: 146,
+                                                    columnNumber: 30
                                                 }, this)
                                             ]
                                         }, slot, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 137,
-                                            columnNumber: 21
+                                            lineNumber: 143,
+                                            columnNumber: 19
                                         }, this);
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 132,
-                                    columnNumber: 15
+                                    lineNumber: 139,
+                                    columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 130,
-                            columnNumber: 13
+                            lineNumber: 137,
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "flex gap-2 mb-6 overflow-x-auto pb-2",
-                            children: types.map((type)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            children: types.map((type)=>{
+                                const active = selectedType === type;
+                                const tv = type === 'all' ? null : TYPE_VISUAL[type];
+                                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     onClick: ()=>setSelectedType(type),
-                                    className: `px-5 py-2 rounded-full text-xs font-bold uppercase transition-all whitespace-nowrap ${selectedType === type ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`,
-                                    children: type === 'all' ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.all', lang) : `${getNFTIcon(type)} ${getNFTLabel(type)}`
+                                    className: `px-5 py-2 rounded-full text-xs font-bold uppercase transition-all whitespace-nowrap border ${active ? type === 'all' ? 'bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/30' : `bg-gradient-to-r ${tv.accent} text-white border-transparent shadow-lg` : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border-gray-700'}`,
+                                    children: type === 'all' ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.all', lang) : `${tv.icon} ${tv.label}`
                                 }, type, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 150,
+                                    lineNumber: 158,
                                     columnNumber: 17
-                                }, this))
+                                }, this);
+                            })
                         }, void 0, false, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 148,
-                            columnNumber: 13
+                            lineNumber: 153,
+                            columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "grid grid-cols-1 sm:grid-cols-2 gap-5",
                             children: filteredNFTs.map((nft, i)=>{
                                 const owned = isOwned(nft.id);
                                 const equipped = isEquipped(nft.id);
-                                const rc = rarityConfig[nft.rarity];
+                                const rc = RARITY_CFG[nft.rarity];
+                                const tv = TYPE_VISUAL[nft.type];
                                 return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
                                     initial: {
                                         y: 20,
@@ -5321,52 +5423,62 @@ function NFTShop({ onBack }) {
                                     transition: {
                                         delay: i * 0.04
                                     },
-                                    className: `rounded-xl border overflow-hidden transition-all hover:scale-[1.02] ${rc.bg} ${rc.border} ${rc.glow} ${equipped ? 'ring-2 ring-orange-400' : ''}`,
+                                    className: `rounded-xl border-2 overflow-hidden transition-all hover:scale-[1.02] bg-gray-950/80 ${rc.border} ${rc.glow} ${equipped ? `ring-2 ${tv.ring}` : ''}`,
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: `h-36 flex flex-col items-center justify-center ${rc.headerBg} relative`,
+                                            className: `h-44 flex items-center justify-center relative bg-gradient-to-br ${tv.accent} opacity-20`,
                                             children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-7xl mb-1 drop-shadow-lg",
-                                                    children: getNFTIcon(nft.type, nft.rarity)
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "absolute inset-0 bg-gradient-to-br ${tv.accent} opacity-10"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 168,
-                                                    columnNumber: 23
+                                                    lineNumber: 174,
+                                                    columnNumber: 21
                                                 }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "absolute top-2 right-2 text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-black/40 text-white/80",
-                                                    children: [
-                                                        getRarityIcon(nft.rarity),
-                                                        " ",
-                                                        nft.rarity
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 169,
-                                                    columnNumber: 23
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/40 text-white/60",
-                                                    children: getNFTLabel(nft.type)
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "relative z-10",
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ShapeIcon, {
+                                                        type: nft.type,
+                                                        size: 90
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/components/game/NFTShop.tsx",
+                                                        lineNumber: 175,
+                                                        columnNumber: 52
+                                                    }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 170,
-                                                    columnNumber: 23
+                                                    lineNumber: 175,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "absolute bottom-2 text-[11px] font-black text-white/90 drop-shadow",
+                                                    className: "absolute top-2.5 right-2.5 text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-black/60 text-white/90 backdrop-blur-sm",
+                                                    children: rc.label
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/game/NFTShop.tsx",
+                                                    lineNumber: 176,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    className: `absolute top-2.5 left-2.5 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${tv.badgeBg} text-white backdrop-blur-sm ring-1 ${tv.ring}`,
+                                                    children: tv.label
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/game/NFTShop.tsx",
+                                                    lineNumber: 177,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    className: "absolute bottom-2.5 text-sm font-black text-white/90 drop-shadow-lg",
                                                     children: nft.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 171,
-                                                    columnNumber: 23
+                                                    lineNumber: 178,
+                                                    columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 167,
-                                            columnNumber: 21
+                                            lineNumber: 173,
+                                            columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "p-4",
@@ -5376,20 +5488,20 @@ function NFTShop({ onBack }) {
                                                     children: nft.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 176,
-                                                    columnNumber: 23
+                                                    lineNumber: 181,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                    className: "text-xs text-gray-500 mb-3",
+                                                    className: `text-xs mb-3 ${tv.textColor}`,
                                                     children: [
-                                                        getNFTLabel(nft.type),
-                                                        " ",
+                                                        tv.label,
+                                                        " · ",
                                                         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.onRitual', lang)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 177,
-                                                    columnNumber: 23
+                                                    lineNumber: 182,
+                                                    columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "grid grid-cols-2 gap-x-4 gap-y-2.5 mb-4",
@@ -5400,8 +5512,8 @@ function NFTShop({ onBack }) {
                                                             color: "green"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 181,
-                                                            columnNumber: 25
+                                                            lineNumber: 184,
+                                                            columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBlock, {
                                                             label: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('controls.shoot', lang).split('(')[0].trim(),
@@ -5409,8 +5521,8 @@ function NFTShop({ onBack }) {
                                                             color: "yellow"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 182,
-                                                            columnNumber: 25
+                                                            lineNumber: 185,
+                                                            columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBlock, {
                                                             label: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('controls.steal', lang),
@@ -5418,8 +5530,8 @@ function NFTShop({ onBack }) {
                                                             color: "blue"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 183,
-                                                            columnNumber: 25
+                                                            lineNumber: 186,
+                                                            columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBlock, {
                                                             label: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('controls.dunk', lang).split('(')[0].trim(),
@@ -5427,14 +5539,14 @@ function NFTShop({ onBack }) {
                                                             color: "red"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 184,
-                                                            columnNumber: 25
+                                                            lineNumber: 187,
+                                                            columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 180,
-                                                    columnNumber: 23
+                                                    lineNumber: 183,
+                                                    columnNumber: 21
                                                 }, this),
                                                 owned ? equipped ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                     onClick: ()=>unequipNFT(nft.type),
@@ -5443,15 +5555,15 @@ function NFTShop({ onBack }) {
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
                                                     lineNumber: 190,
-                                                    columnNumber: 27
+                                                    columnNumber: 23
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                     onClick: ()=>equipNFT(nft),
-                                                    className: "w-full py-2.5 bg-orange-500/80 text-white text-sm font-bold rounded-lg hover:bg-orange-500 transition-all",
+                                                    className: `w-full py-2.5 text-white text-sm font-bold rounded-lg transition-all bg-gradient-to-r ${tv.accent}`,
                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.equip', lang)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
                                                     lineNumber: 192,
-                                                    columnNumber: 27
+                                                    columnNumber: 23
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                     onClick: ()=>handleMint(nft.id, nft.price),
                                                     disabled: minting === nft.id,
@@ -5473,8 +5585,8 @@ function NFTShop({ onBack }) {
                                                                         fill: "none"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                                        lineNumber: 199,
-                                                                        columnNumber: 93
+                                                                        lineNumber: 195,
+                                                                        columnNumber: 169
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
                                                                         className: "opacity-75",
@@ -5482,54 +5594,54 @@ function NFTShop({ onBack }) {
                                                                         d: "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                                        lineNumber: 199,
-                                                                        columnNumber: 199
+                                                                        lineNumber: 195,
+                                                                        columnNumber: 275
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                                lineNumber: 199,
-                                                                columnNumber: 31
+                                                                lineNumber: 195,
+                                                                columnNumber: 107
                                                             }, this),
                                                             (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.minting', lang)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                        lineNumber: 198,
-                                                        columnNumber: 29
-                                                    }, this) : `${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.mintFor', lang)} ${nft.price} RTUAL`
+                                                        lineNumber: 195,
+                                                        columnNumber: 48
+                                                    }, this) : `${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.mintFor', lang)} ${nft.price} RITUAL`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 195,
-                                                    columnNumber: 25
+                                                    lineNumber: 194,
+                                                    columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 175,
-                                            columnNumber: 21
+                                            lineNumber: 180,
+                                            columnNumber: 19
                                         }, this)
                                     ]
                                 }, nft.id, true, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 164,
-                                    columnNumber: 19
+                                    lineNumber: 171,
+                                    columnNumber: 17
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 158,
-                            columnNumber: 13
+                            lineNumber: 166,
+                            columnNumber: 11
                         }, this)
                     ]
-                }, void 0, true) : /* Game History Tab */ /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
                             className: "text-lg font-black text-white mb-4",
-                            children: "Game History"
+                            children: lang === 'zh' ? '对战记录' : 'Game History'
                         }, void 0, false, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 214,
+                            lineNumber: 203,
                             columnNumber: 13
                         }, this),
                         !walletConnected ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5540,22 +5652,22 @@ function NFTShop({ onBack }) {
                                     children: "🔗"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 217,
-                                    columnNumber: 17
+                                    lineNumber: 204,
+                                    columnNumber: 118
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-gray-400",
-                                    children: "Connect your wallet to view game history"
+                                    children: lang === 'zh' ? '连接钱包查看对战记录' : 'Connect your wallet to view game history'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 218,
-                                    columnNumber: 17
+                                    lineNumber: 204,
+                                    columnNumber: 157
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 216,
-                            columnNumber: 15
+                            lineNumber: 204,
+                            columnNumber: 34
                         }, this) : gameHistory.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "text-center py-16 bg-gray-900/40 rounded-xl border border-gray-800",
                             children: [
@@ -5564,26 +5676,26 @@ function NFTShop({ onBack }) {
                                     children: "🏀"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 222,
-                                    columnNumber: 17
+                                    lineNumber: 205,
+                                    columnNumber: 127
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-gray-400",
-                                    children: "No games played yet. Go compete!"
+                                    children: lang === 'zh' ? '还没有对战记录' : 'No games played yet'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 223,
-                                    columnNumber: 17
+                                    lineNumber: 205,
+                                    columnNumber: 166
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 221,
-                            columnNumber: 15
+                            lineNumber: 205,
+                            columnNumber: 43
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "space-y-3",
-                            children: gameHistory.map((record)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: `rounded-xl p-4 border ${record.result === 'win' ? 'border-green-500/30 bg-green-900/10' : 'border-red-500/30 bg-red-900/10'}`,
+                            children: gameHistory.map((r)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: `rounded-xl p-4 border ${r.result === 'win' ? 'border-green-500/30 bg-green-900/10' : 'border-red-500/30 bg-red-900/10'}`,
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "flex items-center justify-between mb-2",
@@ -5592,53 +5704,43 @@ function NFTShop({ onBack }) {
                                                     className: "flex items-center gap-3",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            className: `text-xs font-black px-2 py-0.5 rounded ${record.result === 'win' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`,
-                                                            children: record.result === 'win' ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.win', lang) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.loss', lang)
+                                                            className: `text-xs font-black px-2 py-0.5 rounded ${r.result === 'win' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`,
+                                                            children: r.result === 'win' ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.win', lang) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.loss', lang)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 231,
-                                                            columnNumber: 25
+                                                            lineNumber: 206,
+                                                            columnNumber: 313
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-sm font-bold text-white",
                                                             children: [
                                                                 "vs ",
-                                                                record.opponentName
+                                                                r.opponentName
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 232,
-                                                            columnNumber: 25
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            className: "text-xs text-gray-500",
-                                                            children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('gameOver.roundDone', lang, {
-                                                                r: record.round + 1
-                                                            })
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 233,
-                                                            columnNumber: 25
+                                                            lineNumber: 206,
+                                                            columnNumber: 532
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 230,
-                                                    columnNumber: 23
+                                                    lineNumber: 206,
+                                                    columnNumber: 272
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-xs text-gray-500",
-                                                    children: record.date
+                                                    children: r.date
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 235,
-                                                    columnNumber: 23
+                                                    lineNumber: 206,
+                                                    columnNumber: 611
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 229,
-                                            columnNumber: 21
+                                            lineNumber: 206,
+                                            columnNumber: 216
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "flex items-center gap-6",
@@ -5648,119 +5750,117 @@ function NFTShop({ onBack }) {
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-2xl font-black text-white",
-                                                            children: record.playerScore
+                                                            children: r.playerScore
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 239,
-                                                            columnNumber: 25
+                                                            lineNumber: 206,
+                                                            columnNumber: 754
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-gray-600",
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 240,
-                                                            columnNumber: 25
+                                                            lineNumber: 206,
+                                                            columnNumber: 825
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-2xl font-black text-gray-400",
-                                                            children: record.opponentScore
+                                                            children: r.opponentScore
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 241,
-                                                            columnNumber: 25
+                                                            lineNumber: 206,
+                                                            columnNumber: 865
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 238,
-                                                    columnNumber: 23
+                                                    lineNumber: 206,
+                                                    columnNumber: 713
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "flex gap-4 text-xs text-gray-400",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: [
-                                                                (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.pts', lang),
-                                                                ": ",
-                                                                record.playerPoints
+                                                                "PTS: ",
+                                                                r.playerPoints
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 244,
-                                                            columnNumber: 25
+                                                            lineNumber: 206,
+                                                            columnNumber: 997
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: [
-                                                                (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('shop.stl', lang),
-                                                                ": ",
-                                                                record.steals
+                                                                "STL: ",
+                                                                r.steals
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 245,
-                                                            columnNumber: 25
+                                                            lineNumber: 206,
+                                                            columnNumber: 1031
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-yellow-400",
                                                             children: [
                                                                 "+",
-                                                                record.rtualEarned,
-                                                                " RTUAL"
+                                                                r.rtualEarned,
+                                                                " RITUAL"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 246,
-                                                            columnNumber: 25
+                                                            lineNumber: 206,
+                                                            columnNumber: 1059
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 243,
-                                                    columnNumber: 23
+                                                    lineNumber: 206,
+                                                    columnNumber: 947
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 237,
-                                            columnNumber: 21
+                                            lineNumber: 206,
+                                            columnNumber: 672
                                         }, this)
                                     ]
-                                }, record.id, true, {
+                                }, r.id, true, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 228,
-                                    columnNumber: 19
+                                    lineNumber: 206,
+                                    columnNumber: 66
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 226,
-                            columnNumber: 15
+                            lineNumber: 206,
+                            columnNumber: 16
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                    lineNumber: 213,
+                    lineNumber: 202,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 126,
+                lineNumber: 134,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/game/NFTShop.tsx",
-        lineNumber: 95,
+        lineNumber: 113,
         columnNumber: 5
     }, this);
 }
-function WalletConnectModal({ onClose }) {
+/* ══════════════  WALLET MODAL  ══════════════ */ function WalletConnectModal({ onClose }) {
     const { setWalletAddress, setWalletConnected, setRitualBalance, lang } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useGameStore"])();
     const [connecting, setConnecting] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [errorMsg, setErrorMsg] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
     const connectWallet = async (walletType)=>{
         if (walletType === 'MetaMask' && !(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ritualWallet$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["hasMetaMask"])()) {
-            setErrorMsg(lang === 'zh' ? '请先安装 MetaMask 浏览器插件' : 'Please install MetaMask browser extension first');
+            setErrorMsg(lang === 'zh' ? '请先安装 MetaMask 浏览器插件' : 'Please install MetaMask first');
             return;
         }
         setConnecting(true);
@@ -5776,7 +5876,7 @@ function WalletConnectModal({ onClose }) {
             setWalletConnected(true);
             try {
                 const bal = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ritualWallet$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getRitualBalance"])(address);
-                setRitualBalance(parseFloat(bal) * 1000);
+                setRitualBalance(parseFloat(bal));
             } catch  {
                 setRitualBalance(0);
             }
@@ -5796,7 +5896,7 @@ function WalletConnectModal({ onClose }) {
                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('wallet.connectTitle', lang)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 297,
+                lineNumber: 230,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5804,7 +5904,7 @@ function WalletConnectModal({ onClose }) {
                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('wallet.connectDesc', lang)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 298,
+                lineNumber: 231,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5812,19 +5912,23 @@ function WalletConnectModal({ onClose }) {
                 children: [
                     {
                         n: 'MetaMask',
-                        i: '🦊'
+                        i: '\uD83E\uDD8A',
+                        d: lang === 'zh' ? '推荐' : 'Recommended'
                     },
                     {
                         n: 'WalletConnect',
-                        i: '🔗'
+                        i: '\uD83D\uDD17',
+                        d: 'Mobile'
                     },
                     {
                         n: 'Coinbase Wallet',
-                        i: '💎'
+                        i: '\uD83D\uDC8E',
+                        d: ''
                     },
                     {
                         n: 'Ritual Wallet',
-                        i: '🔮'
+                        i: '\uD83D\uDD2E',
+                        d: 'Native'
                     }
                 ].map((w)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                         onClick: ()=>connectWallet(w.n),
@@ -5836,15 +5940,32 @@ function WalletConnectModal({ onClose }) {
                                 children: w.i
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                                lineNumber: 302,
+                                lineNumber: 240,
                                 columnNumber: 13
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "text-sm font-bold text-white",
-                                children: w.n
-                            }, void 0, false, {
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "text-left",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-sm font-bold text-white block",
+                                        children: w.n
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/game/NFTShop.tsx",
+                                        lineNumber: 241,
+                                        columnNumber: 40
+                                    }, this),
+                                    w.d && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-[10px] text-gray-500",
+                                        children: w.d
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/game/NFTShop.tsx",
+                                        lineNumber: 241,
+                                        columnNumber: 113
+                                    }, this)
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                                lineNumber: 303,
+                                lineNumber: 241,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5852,18 +5973,18 @@ function WalletConnectModal({ onClose }) {
                                 children: "Ritual"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                                lineNumber: 304,
+                                lineNumber: 242,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, w.n, true, {
                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                        lineNumber: 301,
+                        lineNumber: 239,
                         columnNumber: 11
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 299,
+                lineNumber: 232,
                 columnNumber: 7
             }, this),
             errorMsg && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5871,7 +5992,7 @@ function WalletConnectModal({ onClose }) {
                 children: errorMsg
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 308,
+                lineNumber: 245,
                 columnNumber: 20
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5880,13 +6001,13 @@ function WalletConnectModal({ onClose }) {
                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["t"])('wallet.cancel', lang)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 309,
+                lineNumber: 246,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/game/NFTShop.tsx",
-        lineNumber: 296,
+        lineNumber: 229,
         columnNumber: 5
     }, this);
 }

@@ -35,7 +35,7 @@ function WalletConnectModal({ onClose }: { onClose: () => void }) {
       // Get real balance
       try {
         const bal = await getRitualBalance(address);
-        setRitualBalance(parseFloat(bal) * 1000); // Display as mETH for game
+        setRitualBalance(parseFloat(bal));
       } catch {
         setRitualBalance(0);
       }

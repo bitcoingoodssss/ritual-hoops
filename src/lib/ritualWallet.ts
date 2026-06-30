@@ -1,40 +1,69 @@
-// Ritual Chain Configuration
+// Ritual Chain Configuration (from docs.ritualfoundation.org)
 export const RITUAL_CHAIN = {
-  chainId: '0x393', // 919 in hex
-  chainName: 'Ritual Mainnet',
+  chainId: '0x7BB', // 1979 in hex
+  chainName: 'Ritual',
   nativeCurrency: {
-    name: 'Ethereum',
-    symbol: 'ETH',
+    name: 'Ritual',
+    symbol: 'RITUAL',
     decimals: 18,
   },
-  rpcUrls: ['https://rpc.ritual.net'],
-  blockExplorerUrls: ['https://explorer.ritual.net'],
+  rpcUrls: ['https://rpc.ritualfoundation.org'],
+  blockExplorerUrls: ['https://explorer.ritualfoundation.org'],
 };
 
-declare global {
-  interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      on: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
-      selectedAddress: string | null;
-    };
+interface EthereumProvider {
+  isMetaMask?: boolean;
+  isBinance?: boolean;
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+  selectedAddress: string | null;
+}
+
+interface WindowWithEthereum extends Window {
+  ethereum?: EthereumProvider & { providers?: EthereumProvider[] };
+}
+
+/**
+ * Get the real MetaMask provider even when Binance Wallet overrides window.ethereum.
+ * Binance Wallet sets window.ethereum but the real MetaMask is in the providers array.
+ */
+function getMetaMaskProvider(): EthereumProvider | null {
+  const w = window as unknown as WindowWithEthereum;
+  const ethereum = w.ethereum;
+
+  if (!ethereum) return null;
+
+  // If there's a providers array, find MetaMask specifically
+  if (ethereum.providers && ethereum.providers.length > 0) {
+    const metaMask = ethereum.providers.find((p) => p.isMetaMask);
+    if (metaMask) return metaMask;
   }
+
+  // No providers array — if the current one is MetaMask (and not Binance), use it
+  if (ethereum.isMetaMask && !ethereum.isBinance) {
+    return ethereum;
+  }
+
+  return null;
 }
 
 export function hasMetaMask(): boolean {
-  return typeof window !== 'undefined' && !!window.ethereum?.isMetaMask;
+  return typeof window !== 'undefined' && getMetaMaskProvider() !== null;
 }
 
 export async function connectRitualWallet(): Promise<{ address: string; chainId: string }> {
-  const ethereum = window.ethereum;
-  if (!ethereum) {
-    throw new Error('MetaMask not installed');
+  const provider = getMetaMaskProvider();
+  if (!provider) {
+    throw new Error(
+      typeof window !== 'undefined' && (window as unknown as WindowWithEthereum).ethereum
+        ? 'MetaMask not detected. You may have Binance Wallet overriding it. Try disabling Binance Wallet extension.'
+        : 'MetaMask not installed'
+    );
   }
 
-  // Request accounts
-  const accounts = (await ethereum.request({
+  // Request accounts from the real MetaMask
+  const accounts = (await provider.request({
     method: 'eth_requestAccounts',
   })) as string[];
 
@@ -46,15 +75,15 @@ export async function connectRitualWallet(): Promise<{ address: string; chainId:
 
   // Try to switch to Ritual chain, if fails then add it
   try {
-    await ethereum.request({
+    await provider.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: RITUAL_CHAIN.chainId }],
     });
   } catch (switchError: unknown) {
     const err = switchError as { code?: number };
-    // Chain not added yet, add it
+    // Chain not added yet — add it
     if (err.code === 4902) {
-      await ethereum.request({
+      await provider.request({
         method: 'wallet_addEthereumChain',
         params: [RITUAL_CHAIN],
       });
@@ -63,46 +92,34 @@ export async function connectRitualWallet(): Promise<{ address: string; chainId:
     }
   }
 
-  const chainId = (await ethereum.request({ method: 'eth_chainId' })) as string;
-
+  const chainId = (await provider.request({ method: 'eth_chainId' })) as string;
   return { address, chainId };
 }
 
 export async function getRitualBalance(address: string): Promise<string> {
-  const ethereum = window.ethereum;
-  if (!ethereum) return '0';
+  const provider = getMetaMaskProvider();
+  if (!provider) return '0';
 
-  const balance = (await ethereum.request({
+  const balance = (await provider.request({
     method: 'eth_getBalance',
     params: [address, 'latest'],
   })) as string;
 
-  // Convert from hex wei to ETH
+  // Convert from hex wei to RITUAL
   const wei = parseInt(balance, 16);
   return (wei / 1e18).toFixed(4);
 }
 
-export async function signMessage(message: string): Promise<string> {
-  const ethereum = window.ethereum;
-  if (!ethereum) throw new Error('No wallet');
-
-  const accounts = (await ethereum.request({ method: 'eth_accounts' })) as string[];
-  if (!accounts || accounts.length === 0) throw new Error('No accounts');
-
-  return (await ethereum.request({
-    method: 'personal_sign',
-    params: [message, accounts[0]],
-  })) as string;
-}
-
 export function onAccountsChanged(callback: (accounts: string[]) => void) {
-  window.ethereum?.on('accountsChanged', callback as (...args: unknown[]) => void);
-  return () => window.ethereum?.removeListener('accountsChanged', callback as (...args: unknown[]) => void);
+  const provider = getMetaMaskProvider();
+  provider?.on('accountsChanged', callback as (...args: unknown[]) => void);
+  return () => provider?.removeListener('accountsChanged', callback as (...args: unknown[]) => void);
 }
 
 export function onChainChanged(callback: (chainId: string) => void) {
-  window.ethereum?.on('chainChanged', callback as (...args: unknown[]) => void);
-  return () => window.ethereum?.removeListener('chainChanged', callback as (...args: unknown[]) => void);
+  const provider = getMetaMaskProvider();
+  provider?.on('chainChanged', callback as (...args: unknown[]) => void);
+  return () => provider?.removeListener('chainChanged', callback as (...args: unknown[]) => void);
 }
 
 export function isRitualChain(chainId: string): boolean {
