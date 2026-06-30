@@ -82,3 +82,12 @@ Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allow
 [01:55:17.035] Browser LOG     restart sse, about to listen
 [01:55:17.035] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
 [01:55:17.202] Browser LOG     open {"isTrusted":true}
+[01:55:27.592] Server  LOG     ✓ Compiled in 152ms
+[01:55:28.307] Server  LOG     ✓ Compiled in 122ms
+[01:55:41.331] Server  LOG     ✓ Compiled in 146ms
+[02:00:17.036] Browser LOG     restart sse, about to listen
+[02:00:17.036] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[02:00:17.720] Browser LOG     open {"isTrusted":true}
+[02:05:17.052] Browser LOG     restart sse, about to listen
+[02:05:17.052] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[02:05:17.268] Browser LOG     open {"isTrusted":true}

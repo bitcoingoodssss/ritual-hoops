@@ -16,6 +16,7 @@ export default function BasketballGame() {
     setShotClock, setGameTimer, nextRound, setCombo, setLastAction,
     setShowParticles, addPlayerPoints, addPlayerStat, totalRounds,
     addGameRecord, setRitualBalance, getPlayerBonusStats,
+    twitterId, playerName, gameHistory,
   } = useGameStore();
 
   const [shotClockDisplay, setShotClockDisplay] = useState(24);
@@ -132,14 +133,26 @@ export default function BasketballGame() {
     useGameStore.getState().initTournament();
   };
 
+  const handleExitGame = () => {
+    if (engineRef.current) { engineRef.current.stop(); engineRef.current.destroy(); engineRef.current = null; }
+    setPhase('menu');
+  };
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
       <canvas ref={canvasRef} className="w-full h-full block" />
       {phase === 'playing' && (
+        <button onClick={handleExitGame} className="absolute top-4 left-16 z-50 pointer-events-auto bg-black/60 backdrop-blur-md rounded-lg px-3 py-1.5 border border-red-500/40 text-red-400 text-xs font-bold hover:bg-red-500/20 hover:text-red-300 transition-all flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          {lang === 'zh' ? '退出' : 'EXIT'}
+        </button>
+      )}
+      {phase === 'playing' && (
         <GameHUD playerScore={playerScore} opponentScore={opponentScore} shotClock={shotClockDisplay}
           gameTimer={gameTimerDisplay} currentRound={currentRound} opponentName={currentOpponent?.name || ''}
           lastAction={lastAction} combo={combo} hasBall={hasBall} shootPower={shootPower}
-          getPlayerBonusStats={getPlayerBonusStats} />
+          getPlayerBonusStats={getPlayerBonusStats} twitterId={twitterId} playerName={playerName}
+          avatarUrl={avatarUrl} gameHistory={gameHistory} />
       )}
       {phase === 'playing' && <ContextHintOverlay hint={contextHint} />}
       {phase === 'playing' && <ControlsHelp />}
@@ -167,10 +180,11 @@ function LangToggle() {
 }
 
 // ============== HUD Component ==============
-function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRound, opponentName, lastAction, combo, hasBall, shootPower, getPlayerBonusStats }: {
+function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRound, opponentName, lastAction, combo, hasBall, shootPower, getPlayerBonusStats, twitterId, playerName, avatarUrl, gameHistory }: {
   playerScore: number; opponentScore: number; shotClock: number; gameTimer: string;
   currentRound: number; opponentName: string; lastAction: string; combo: number;
-  hasBall: boolean; shootPower: number;
+  hasBall: boolean; shootPower: number; twitterId: string; playerName: string;
+  avatarUrl: string; gameHistory: { result: string; playerScore: number; opponentScore: number; opponentName: string }[];
   getPlayerBonusStats: () => { speed: number; shoot: number; defense: number; dunk: number };
 }) {
   const lang = useGameStore((s) => s.lang);
