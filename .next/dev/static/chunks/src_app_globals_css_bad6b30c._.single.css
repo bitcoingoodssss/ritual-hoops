@@ -666,6 +666,10 @@
     top: 60%;
   }
 
+  .top-\[72px\] {
+    top: 72px;
+  }
+
   .top-full {
     top: 100%;
   }
@@ -1937,6 +1941,16 @@
     }
   }
 
+  .border-gray-700\/40 {
+    border-color: #36415366;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-gray-700\/40 {
+      border-color: color-mix(in oklab, var(--color-gray-700) 40%, transparent);
+    }
+  }
+
   .border-gray-700\/50 {
     border-color: #36415380;
   }
@@ -1973,6 +1987,16 @@
 
   .border-input {
     border-color: var(--input);
+  }
+
+  .border-orange-400\/60 {
+    border-color: #ff8b1a99;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-orange-400\/60 {
+      border-color: color-mix(in oklab, var(--color-orange-400) 60%, transparent);
+    }
   }
 
   .border-orange-500 {

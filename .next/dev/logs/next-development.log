@@ -78,3 +78,7 @@ Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allow
 [01:53:53.297] Server  LOG     ✓ Compiled in 76ms
 [01:53:57.949] Server  LOG     ✓ Compiled in 133ms
 [01:54:00.794] Server  LOG     ✓ Compiled in 140ms
+[01:54:08.883] Server  LOG     ✓ Compiled in 226ms
+[01:55:17.035] Browser LOG     restart sse, about to listen
+[01:55:17.035] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:55:17.202] Browser LOG     open {"isTrusted":true}

@@ -2736,7 +2736,7 @@ function BasketballGame() {
     const canvasRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
     const engineRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
     const frameRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(0);
-    const { avatarUrl, currentOpponent, phase, playerScore, opponentScore, lastAction, combo, hasBall, walletConnected, playerStats, currentRound, lang, setLang, setPhase, setScore, setHasBall, setPlayerAction, setShotClock, setGameTimer, nextRound, setCombo, setLastAction, setShowParticles, addPlayerPoints, addPlayerStat, totalRounds, addGameRecord, setRitualBalance, getPlayerBonusStats } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"])();
+    const { avatarUrl: avatarUrl1, currentOpponent, phase, playerScore, opponentScore, lastAction, combo, hasBall, walletConnected, playerStats, currentRound, lang, setLang, setPhase, setScore, setHasBall, setPlayerAction, setShotClock, setGameTimer, nextRound, setCombo, setLastAction, setShowParticles, addPlayerPoints, addPlayerStat, totalRounds, addGameRecord, setRitualBalance, getPlayerBonusStats } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"])();
     const [shotClockDisplay, setShotClockDisplay] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(24);
     const [gameTimerDisplay, setGameTimerDisplay] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('3:00');
     const [shootPower, setShootPower] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
@@ -2746,7 +2746,7 @@ function BasketballGame() {
             if (!canvasRef.current || engineRef.current) return;
             const engine = new __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$game$2f$engine$2f$GameEngine$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GameEngine"](canvasRef.current, window.innerWidth, window.innerHeight);
             engineRef.current = engine;
-            if (avatarUrl) engine.setPlayerAvatar(avatarUrl);
+            if (avatarUrl1) engine.setPlayerAvatar(avatarUrl1);
             if (currentOpponent?.avatarUrl) engine.setOpponentAvatar(currentOpponent.avatarUrl);
             engine.setPlayerBonus(getPlayerBonusStats());
             engine.onContextHint = ({
@@ -2855,7 +2855,7 @@ function BasketballGame() {
             })["BasketballGame.useCallback[initEngine]"];
         }
     }["BasketballGame.useCallback[initEngine]"], [
-        avatarUrl,
+        avatarUrl1,
         currentOpponent,
         setScore,
         setHasBall,
@@ -3154,6 +3154,48 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "absolute top-[72px] left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 border border-gray-700/40",
+                children: [
+                    avatarUrl && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                        src: avatarUrl,
+                        alt: "",
+                        className: "w-5 h-5 rounded-full border border-orange-400/60"
+                    }, void 0, false, {
+                        fileName: "[project]/src/components/game/BasketballGame.tsx",
+                        lineNumber: 210,
+                        columnNumber: 23
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        className: "text-[11px] font-bold text-gray-300",
+                        children: [
+                            "@",
+                            twitterId || playerName
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/components/game/BasketballGame.tsx",
+                        lineNumber: 211,
+                        columnNumber: 9
+                    }, this),
+                    gameHistory.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        className: "text-[10px] text-yellow-400 font-bold",
+                        children: [
+                            gameHistory.filter((g)=>g.result === 'win').length,
+                            "W-",
+                            gameHistory.filter((g)=>g.result === 'loss').length,
+                            "L"
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/components/game/BasketballGame.tsx",
+                        lineNumber: 213,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/src/components/game/BasketballGame.tsx",
+                lineNumber: 209,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "absolute top-4 right-4 flex flex-col items-end gap-2",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3164,7 +3206,7 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('hud.shotClock', lang)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 210,
+                                lineNumber: 218,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3172,13 +3214,13 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                                 children: shotClock
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 211,
+                                lineNumber: 219,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 209,
+                        lineNumber: 217,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3189,7 +3231,7 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('hud.time', lang)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 214,
+                                lineNumber: 222,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3197,19 +3239,19 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                                 children: gameTimer
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 215,
+                                lineNumber: 223,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 213,
+                        lineNumber: 221,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 208,
+                lineNumber: 216,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3219,12 +3261,12 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                     children: hasBall ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('hud.yourBall', lang) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('hud.oppBall', lang)
                 }, void 0, false, {
                     fileName: "[project]/src/components/game/BasketballGame.tsx",
-                    lineNumber: 219,
+                    lineNumber: 227,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 218,
+                lineNumber: 226,
                 columnNumber: 7
             }, this),
             lastAction && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3237,12 +3279,12 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                     children: lastAction.toUpperCase().replace(/_/g, ' ')
                 }, void 0, false, {
                     fileName: "[project]/src/components/game/BasketballGame.tsx",
-                    lineNumber: 225,
+                    lineNumber: 233,
                     columnNumber: 11
                 }, this)
             }, actionKey, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 224,
+                lineNumber: 232,
                 columnNumber: 9
             }, this),
             combo > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3257,12 +3299,12 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                     })
                 }, void 0, false, {
                     fileName: "[project]/src/components/game/BasketballGame.tsx",
-                    lineNumber: 232,
+                    lineNumber: 240,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 231,
+                lineNumber: 239,
                 columnNumber: 9
             }, this),
             (bonus.speed > 0 || bonus.shoot > 0 || bonus.defense > 0 || bonus.dunk > 0) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3273,7 +3315,7 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('hud.nftBonus', lang)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 239,
+                        lineNumber: 247,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3286,7 +3328,7 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 241,
+                                lineNumber: 249,
                                 columnNumber: 33
                             }, this),
                             bonus.shoot > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3296,7 +3338,7 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 242,
+                                lineNumber: 250,
                                 columnNumber: 33
                             }, this),
                             bonus.defense > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3306,7 +3348,7 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 243,
+                                lineNumber: 251,
                                 columnNumber: 35
                             }, this),
                             bonus.dunk > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3316,19 +3358,19 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 244,
+                                lineNumber: 252,
                                 columnNumber: 32
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 240,
+                        lineNumber: 248,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 238,
+                lineNumber: 246,
                 columnNumber: 9
             }, this)
         ]
@@ -3385,12 +3427,12 @@ function ContextHintOverlay({ hint }) {
             children: c.text
         }, void 0, false, {
             fileName: "[project]/src/components/game/BasketballGame.tsx",
-            lineNumber: 267,
+            lineNumber: 275,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/game/BasketballGame.tsx",
-        lineNumber: 266,
+        lineNumber: 274,
         columnNumber: 5
     }, this);
 }
@@ -3454,7 +3496,7 @@ function ControlsHelp() {
                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('controls.label', lang)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 286,
+                        lineNumber: 294,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3466,13 +3508,13 @@ function ControlsHelp() {
                         children: "✕"
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 287,
+                        lineNumber: 295,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 285,
+                lineNumber: 293,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3484,7 +3526,7 @@ function ControlsHelp() {
                         keys: "W A S D"
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 290,
+                        lineNumber: 298,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ControlRow, {
@@ -3493,7 +3535,7 @@ function ControlsHelp() {
                         keys: "SPACE"
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 291,
+                        lineNumber: 299,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ControlRow, {
@@ -3503,7 +3545,7 @@ function ControlsHelp() {
                         highlight: true
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 292,
+                        lineNumber: 300,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ControlRow, {
@@ -3512,7 +3554,7 @@ function ControlsHelp() {
                         keys: "F"
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 293,
+                        lineNumber: 301,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ControlRow, {
@@ -3521,7 +3563,7 @@ function ControlsHelp() {
                         keys: "Q"
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 294,
+                        lineNumber: 302,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ControlRow, {
@@ -3530,13 +3572,13 @@ function ControlsHelp() {
                         keys: "SHIFT"
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 295,
+                        lineNumber: 303,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 289,
+                lineNumber: 297,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3544,7 +3586,7 @@ function ControlsHelp() {
                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('controls.tipLine', lang)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 297,
+                lineNumber: 305,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3552,13 +3594,13 @@ function ControlsHelp() {
                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('controls.toggleHint', lang)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 298,
+                lineNumber: 306,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/game/BasketballGame.tsx",
-        lineNumber: 284,
+        lineNumber: 292,
         columnNumber: 5
     }, this);
 }
@@ -3580,7 +3622,7 @@ function ControlRow({ icon, label, keys, highlight }) {
                         children: icon
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 306,
+                        lineNumber: 314,
                         columnNumber: 63
                     }, this),
                     " ",
@@ -3588,7 +3630,7 @@ function ControlRow({ icon, label, keys, highlight }) {
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 306,
+                lineNumber: 314,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3596,13 +3638,13 @@ function ControlRow({ icon, label, keys, highlight }) {
                 children: keys
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 307,
+                lineNumber: 315,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/game/BasketballGame.tsx",
-        lineNumber: 305,
+        lineNumber: 313,
         columnNumber: 5
     }, this);
 }
@@ -3621,28 +3663,28 @@ function MiniControlsBar() {
                 active: true
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 317,
+                lineNumber: 325,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "w-px h-3.5 bg-gray-700/60"
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 317,
+                lineNumber: 325,
                 columnNumber: 45
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniKey, {
                 label: "SPACE"
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 318,
+                lineNumber: 326,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "w-px h-3.5 bg-gray-700/60"
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 318,
+                lineNumber: 326,
                 columnNumber: 32
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniKey, {
@@ -3650,14 +3692,14 @@ function MiniControlsBar() {
                 active: hasBall
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 319,
+                lineNumber: 327,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "w-px h-3.5 bg-gray-700/60"
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 319,
+                lineNumber: 327,
                 columnNumber: 45
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniKey, {
@@ -3665,41 +3707,41 @@ function MiniControlsBar() {
                 active: hasBall
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 320,
+                lineNumber: 328,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "w-px h-3.5 bg-gray-700/60"
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 320,
+                lineNumber: 328,
                 columnNumber: 45
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniKey, {
                 label: "Q"
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 321,
+                lineNumber: 329,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "w-px h-3.5 bg-gray-700/60"
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 321,
+                lineNumber: 329,
                 columnNumber: 28
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniKey, {
                 label: "SHIFT"
             }, void 0, false, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 322,
+                lineNumber: 330,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/game/BasketballGame.tsx",
-        lineNumber: 316,
+        lineNumber: 324,
         columnNumber: 5
     }, this);
 }
@@ -3715,7 +3757,7 @@ function MiniKey({ label, active }) {
         children: label
     }, void 0, false, {
         fileName: "[project]/src/components/game/BasketballGame.tsx",
-        lineNumber: 327,
+        lineNumber: 335,
         columnNumber: 11
     }, this);
 }
@@ -3741,7 +3783,7 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                         children: isWin ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('gameOver.victory', lang) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('gameOver.defeat', lang)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 339,
+                        lineNumber: 347,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3751,7 +3793,7 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                         })
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 342,
+                        lineNumber: 350,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3764,7 +3806,7 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('hud.you', lang)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                        lineNumber: 344,
+                                        lineNumber: 352,
                                         columnNumber: 18
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3772,13 +3814,13 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                                         children: playerScore
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                        lineNumber: 344,
+                                        lineNumber: 352,
                                         columnNumber: 95
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 344,
+                                lineNumber: 352,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3786,7 +3828,7 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                                 children: "-"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 345,
+                                lineNumber: 353,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3796,7 +3838,7 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                                         children: opponentName
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                        lineNumber: 346,
+                                        lineNumber: 354,
                                         columnNumber: 18
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3804,19 +3846,19 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                                         children: opponentScore
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                        lineNumber: 346,
+                                        lineNumber: 354,
                                         columnNumber: 87
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 346,
+                                lineNumber: 354,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 343,
+                        lineNumber: 351,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3827,12 +3869,12 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                                 className: `w-3 h-3 rounded-full ${i < currentRound + 1 ? 'bg-orange-400 shadow-lg shadow-orange-400/50' : 'bg-gray-700'}`
                             }, i, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 349,
+                                lineNumber: 357,
                                 columnNumber: 65
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 348,
+                        lineNumber: 356,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3840,7 +3882,7 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('gameOver.progress', lang)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 351,
+                        lineNumber: 359,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3852,7 +3894,7 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('gameOver.nextRound', lang)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 353,
+                                lineNumber: 361,
                                 columnNumber: 58
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3861,29 +3903,29 @@ function GameOverOverlay({ playerScore, opponentScore, opponentName, currentRoun
                                 children: isWin && currentRound >= totalRounds - 1 ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('gameOver.newTourney', lang) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('gameOver.restart', lang)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 354,
+                                lineNumber: 362,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 352,
+                        lineNumber: 360,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 338,
+                lineNumber: 346,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/game/BasketballGame.tsx",
-            lineNumber: 337,
+            lineNumber: 345,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/game/BasketballGame.tsx",
-        lineNumber: 336,
+        lineNumber: 344,
         columnNumber: 5
     }, this);
 }
@@ -3911,7 +3953,7 @@ function TournamentWinOverlay({ onRestart }) {
                         children: "👑"
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 371,
+                        lineNumber: 379,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3922,7 +3964,7 @@ function TournamentWinOverlay({ onRestart }) {
                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('champ.title', lang)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 372,
+                        lineNumber: 380,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3930,7 +3972,7 @@ function TournamentWinOverlay({ onRestart }) {
                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('champ.subtitle', lang)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 373,
+                        lineNumber: 381,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3938,7 +3980,7 @@ function TournamentWinOverlay({ onRestart }) {
                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('champ.tagline', lang)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 374,
+                        lineNumber: 382,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3949,7 +3991,7 @@ function TournamentWinOverlay({ onRestart }) {
                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('champ.rewards', lang)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 376,
+                                lineNumber: 384,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3962,7 +4004,7 @@ function TournamentWinOverlay({ onRestart }) {
                                                 children: "🏅"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                                lineNumber: 378,
+                                                lineNumber: 386,
                                                 columnNumber: 20
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3970,13 +4012,13 @@ function TournamentWinOverlay({ onRestart }) {
                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('champ.trophy', lang)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                                lineNumber: 378,
+                                                lineNumber: 386,
                                                 columnNumber: 54
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                        lineNumber: 378,
+                                        lineNumber: 386,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3986,7 +4028,7 @@ function TournamentWinOverlay({ onRestart }) {
                                                 children: "💎"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                                lineNumber: 379,
+                                                lineNumber: 387,
                                                 columnNumber: 20
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3994,13 +4036,13 @@ function TournamentWinOverlay({ onRestart }) {
                                                 children: "50 RTUAL"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                                lineNumber: 379,
+                                                lineNumber: 387,
                                                 columnNumber: 54
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                        lineNumber: 379,
+                                        lineNumber: 387,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4010,7 +4052,7 @@ function TournamentWinOverlay({ onRestart }) {
                                                 children: "⭐"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                                lineNumber: 380,
+                                                lineNumber: 388,
                                                 columnNumber: 20
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4018,25 +4060,25 @@ function TournamentWinOverlay({ onRestart }) {
                                                 children: lang === 'zh' ? '冠军徽章' : 'Champion Badge'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                                lineNumber: 380,
+                                                lineNumber: 388,
                                                 columnNumber: 53
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                        lineNumber: 380,
+                                        lineNumber: 388,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                                lineNumber: 377,
+                                lineNumber: 385,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 375,
+                        lineNumber: 383,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4045,23 +4087,23 @@ function TournamentWinOverlay({ onRestart }) {
                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('champ.again', lang)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/BasketballGame.tsx",
-                        lineNumber: 383,
+                        lineNumber: 391,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/game/BasketballGame.tsx",
-                lineNumber: 370,
+                lineNumber: 378,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/game/BasketballGame.tsx",
-            lineNumber: 369,
+            lineNumber: 377,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/game/BasketballGame.tsx",
-        lineNumber: 368,
+        lineNumber: 376,
         columnNumber: 5
     }, this);
 }

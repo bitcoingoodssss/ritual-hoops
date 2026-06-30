@@ -205,6 +205,14 @@ function GameHUD({ playerScore, opponentScore, shotClock, gameTimer, currentRoun
           </div>
         </div>
       </div>
+      {/* Player Twitter info - below score */}
+      <div className="absolute top-[72px] left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 border border-gray-700/40">
+        {avatarUrl && <img src={avatarUrl} alt="" className="w-5 h-5 rounded-full border border-orange-400/60" />}
+        <span className="text-[11px] font-bold text-gray-300">@{twitterId || playerName}</span>
+        {gameHistory.length > 0 && (
+          <span className="text-[10px] text-yellow-400 font-bold">{gameHistory.filter(g => g.result === 'win').length}W-{gameHistory.filter(g => g.result === 'loss').length}L</span>
+        )}
+      </div>
       <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
         <div className="bg-black/60 backdrop-blur rounded-lg px-3 py-1.5 border border-yellow-500/40">
           <div className="text-[10px] text-yellow-400 font-bold">{t('hud.shotClock', lang)}</div>
