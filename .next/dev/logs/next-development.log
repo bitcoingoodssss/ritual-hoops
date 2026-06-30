@@ -18,3 +18,6 @@
 [01:11:19.637] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
 [01:11:20.114] Browser LOG     open {"isTrusted":true}
 [01:12:39.678] Server  LOG     ✓ Compiled in 162ms
+[01:16:19.633] Browser LOG     restart sse, about to listen
+[01:16:19.633] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:16:19.803] Browser LOG     open {"isTrusted":true}
