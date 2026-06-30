@@ -88,7 +88,7 @@ function StatBlock({ label, value, color }: { label: string; value: number; colo
 
 /* ══════════════  MAIN SHOP  ══════════════ */
 export default function NFTShop({ onBack }: { onBack: () => void }) {
-  const { ownedNFTs, equippedNFTs, walletConnected, walletAddress, equipNFT, unequipNFT, addOwnedNFT, ritualBalance, gameHistory, lang, setLang } = useGameStore();
+  const { ownedNFTs, equippedNFTs, walletConnected, walletAddress, equipNFT, unequipNFT, addOwnedNFT, ritualBalance, setRitualBalance, gameHistory, lang, setLang } = useGameStore();
   const [selectedType, setSelectedType] = useState('all');
   const [minting, setMinting] = useState<string | null>(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
@@ -105,6 +105,14 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
       console.log(`NFT mint tx: ${txHash}`);
       const nft = ALL_NFTS.find(n => n.id === nftId);
       if (nft) { addOwnedNFT(nft); }
+      // Refresh balance after purchase
+      try {
+        const addr = useGameStore.getState().walletAddress;
+        if (addr) {
+          const newBal = await getRitualBalance(addr);
+          setRitualBalance(parseFloat(newBal));
+        }
+      } catch { /* balance refresh failed, not critical */ }
     } catch (err: unknown) {
       const e = err as { message?: string };
       alert(lang === 'zh' ? `购买失败: ${e.message || '交易被拒绝'}` : `Purchase failed: ${e.message || 'Transaction rejected'}`);

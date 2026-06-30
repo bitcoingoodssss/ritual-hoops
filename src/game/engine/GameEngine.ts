@@ -138,7 +138,7 @@ export class GameEngine {
   constructor(canvas: HTMLCanvasElement, width: number, height: number) {
     // Scene
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x0a0a1a, 0.008);
+    this.scene.fog = new THREE.FogExp2(0x1a1520, 0.006);
     
     // Camera
     this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 200);
@@ -256,299 +256,347 @@ export class GameEngine {
   }
 
   private buildArena() {
-    // Arena floor
-    const arenaGeo = new THREE.PlaneGeometry(80, 80);
+    // Arena concourse floor (dark concrete)
+    const arenaGeo = new THREE.PlaneGeometry(120, 120);
     const arenaMat = new THREE.MeshStandardMaterial({
-      color: 0x080810,
-      roughness: 0.95,
+      color: 0x2a2530,
+      roughness: 0.92,
       metalness: 0.0,
     });
     const arenaFloor = new THREE.Mesh(arenaGeo, arenaMat);
     arenaFloor.rotation.x = -Math.PI / 2;
-    arenaFloor.position.y = -0.02;
+    arenaFloor.position.y = -0.05;
     arenaFloor.receiveShadow = true;
     this.scene.add(arenaFloor);
-    
-    // Neon strip along court edges
-    const stripGeo = new THREE.BoxGeometry(COURT_WIDTH + 2, 0.15, COURT_LENGTH + 2);
-    const stripMat = new THREE.MeshStandardMaterial({
-      color: 0xff00ff,
-      emissive: 0xff00ff,
-      emissiveIntensity: 0.5,
-      roughness: 0.1,
-      transparent: true,
-      opacity: 0.4,
-    });
-    const neonStrip = new THREE.Mesh(stripGeo, stripMat);
-    neonStrip.rotation.x = -Math.PI / 2;
-    neonStrip.position.y = 0.02;
-    this.scene.add(neonStrip);
-    
+    this.arenaFloor = arenaFloor;
     this.floorMaterial = arenaMat;
-    
-    // Arena walls / stands
-    this.buildStands();
+    this.buildStadiumSeats();
   }
 
-  private buildStands() {
-    const standMat = new THREE.MeshStandardMaterial({ color: 0x0a0a1a, roughness: 0.9, metalness: 0.1 });
-    
-    // Simple back stand
-    const backStand = new THREE.Mesh(new THREE.BoxGeometry(60, 6, 3), standMat);
-    backStand.position.set(0, 3, -26);
-    this.scene.add(backStand);
-    
-    // Front stand
-    const frontStand = new THREE.Mesh(new THREE.BoxGeometry(60, 6, 3), standMat);
-    frontStand.position.set(0, 3, 26);
-    this.scene.add(frontStand);
-    
-    // Side stands
-    const leftStand = new THREE.Mesh(new THREE.BoxGeometry(3, 8, 56), standMat);
-    leftStand.position.set(-16, 3, 0);
-    this.scene.add(leftStand);
-    
-    const rightStand = new THREE.Mesh(new THREE.BoxGeometry(3, 8, 56), standMat);
-    rightStand.position.set(16, 3, 0);
-    this.scene.add(rightStand);
-    
-    // Neon strip lights along court edges (punk feel)
-    const neonColors = [0xff00ff, 0x00ffff, 0xff00ff, 0xf72585];
-    const edgePositions = [
-      [-14, 0.1, -23.5], [14, 0.1, -23.5],
-      [-14, 0.1, 23.5], [14, 0.1, 23.5],
-      [14, 0.1, 0], [-14, 0.1, 0],
-      [-14, 0.1, -23.5], [14, 0.1, 23.5],
-      [14, 0.1, 0], [-14, 0.1, 0],
-    ];
-    edgePositions.forEach((pos, i) => {
-      const light = new THREE.PointLight(neonColors[i % neonColors.length], 2, 15);
-      light.position.set(...pos);
-      this.scene.add(light);
+  private buildStadiumSeats() {
+    // Seat colors - realistic arena mix
+    const seatColors = [0xcc2233, 0xcc2233, 0x1a3a6b, 0x1a3a6b, 0xcc2233, 0xddaa22, 0x1a3a6b, 0xcc2233];
+    const seatW = 0.55;
+    const seatH = 0.45;
+    const seatD = 0.5;
+    const seatGeo = new THREE.BoxGeometry(seatW, seatH, seatD);
+    const backGeo = new THREE.BoxGeometry(seatW, 0.6, 0.06);
+
+    function createSeat(color: number): THREE.Group {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05 });
+      const seat = new THREE.Mesh(seatGeo, mat);
+      seat.position.y = 0.225;
+      g.add(seat);
+      const back = new THREE.Mesh(backGeo, mat);
+      back.position.set(0, 0.55, -seatD / 2);
+      g.add(back);
+      return g;
+    }
+
+    // Helper to build a grandstand section along one side
+    const buildSection = (startX: number, startZ: number, length: number, depth: number, rotY: number, numTiers: number) => {
+      const tierHeight = 0.65;
+      const tierDepth = 0.85;
+      const seatsPerRow = Math.floor(length / 0.62);
+
+      for (let tier = 0; tier < numTiers; tier++) {
+        const baseY = tier * tierHeight;
+        const baseZ = tier * tierDepth * (rotY === 0 || rotY === Math.PI ? 1 : 1);
+
+        // Tier floor
+        const tierGeo = new THREE.BoxGeometry(length + 1, 0.15, tierDepth + 0.3);
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x3a3540, roughness: 0.85, metalness: 0.05 });
+        const tierFloor = new THREE.Mesh(tierGeo, tierMat);
+        tierFloor.position.set(startX + length / 2, baseY, startZ + tierDepth / 2);
+        this.scene.add(tierFloor);
+
+        for (let s = 0; s < seatsPerRow; s++) {
+          const colorIdx = (s + tier * 7) % seatColors.length;
+          const seat = createSeat(seatColors[colorIdx]);
+          const sx = startX + 0.4 + s * 0.62;
+          const sz = startZ + 0.15;
+          seat.position.set(sx, baseY, sz);
+          this.scene.add(seat);
+        }
+      }
+    };
+
+    // Back stands (behind opponent hoop, -Z side)
+    buildSection(-20, -COURT_LENGTH / 2 - 2, 40, 5, 0, 8);
+
+    // Front stands (behind player hoop, +Z side)
+    buildSection(-20, COURT_LENGTH / 2 + 2, 40, 5, Math.PI, 8);
+
+    // Side stands - LEFT (-X)
+    {
+      const sideLen = COURT_LENGTH + 12;
+      const seatsPerRow = Math.floor(sideLen / 0.62);
+      for (let tier = 0; tier < 6; tier++) {
+        const baseY = tier * 0.65;
+        const baseX = -COURT_WIDTH / 2 - 2 - tier * 0.85;
+        const tierGeo = new THREE.BoxGeometry(0.9, 0.15, sideLen + 1);
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x3a3540, roughness: 0.85, metalness: 0.05 });
+        const tierFloor = new THREE.Mesh(tierGeo, tierMat);
+        tierFloor.position.set(baseX, baseY, 0);
+        this.scene.add(tierFloor);
+        for (let s = 0; s < seatsPerRow; s++) {
+          const colorIdx = (s + tier * 5) % seatColors.length;
+          const seat = createSeat(seatColors[colorIdx]);
+          const sz = -sideLen / 2 + 0.4 + s * 0.62;
+          seat.position.set(baseX + 0.2, baseY, sz);
+          seat.rotation.y = Math.PI / 2;
+          this.scene.add(seat);
+        }
+      }
+    }
+
+    // Side stands - RIGHT (+X)
+    {
+      const sideLen = COURT_LENGTH + 12;
+      const seatsPerRow = Math.floor(sideLen / 0.62);
+      for (let tier = 0; tier < 6; tier++) {
+        const baseY = tier * 0.65;
+        const baseX = COURT_WIDTH / 2 + 2 + tier * 0.85;
+        const tierGeo = new THREE.BoxGeometry(0.9, 0.15, sideLen + 1);
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x3a3540, roughness: 0.85, metalness: 0.05 });
+        const tierFloor = new THREE.Mesh(tierGeo, tierMat);
+        tierFloor.position.set(baseX, baseY, 0);
+        this.scene.add(tierFloor);
+        for (let s = 0; s < seatsPerRow; s++) {
+          const colorIdx = (s + tier * 3) % seatColors.length;
+          const seat = createSeat(seatColors[colorIdx]);
+          const sz = -sideLen / 2 + 0.4 + s * 0.62;
+          seat.position.set(baseX - 0.2, baseY, sz);
+          seat.rotation.y = -Math.PI / 2;
+          this.scene.add(seat);
+        }
+      }
+    }
+
+    // Scoreboard hanging above center
+    const boardGeo = new THREE.BoxGeometry(8, 1.2, 0.15);
+    const boardMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.6 });
+    const board = new THREE.Mesh(boardGeo, boardMat);
+    board.position.set(0, 12, 0);
+    this.scene.add(board);
+
+    // Scoreboard screen (glowing)
+    const screenGeo = new THREE.PlaneGeometry(7.5, 1.0);
+    const screenMat = new THREE.MeshStandardMaterial({
+      color: 0x111833,
+      emissive: 0x112244,
+      emissiveIntensity: 0.5,
+      roughness: 0.2,
+      metalness: 0.3,
+    });
+    const screen = new THREE.Mesh(screenGeo, screenMat);
+    screen.position.set(0, 12, 0.08);
+    this.scene.add(screen);
+
+    // Scoreboard support cables (thin cylinders to corners)
+    const cableMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8, roughness: 0.3 });
+    [[-3, -3], [3, -3], [-3, 3], [3, 3]].forEach(([x, z]) => {
+      const cableGeo = new THREE.CylinderGeometry(0.02, 0.02, 8, 4);
+      const cable = new THREE.Mesh(cableGeo, cableMat);
+      cable.position.set(x, 16, z);
+      this.scene.add(cable);
     });
   }
 
   private buildCourt() {
     this.court = new THREE.Group();
-    
-    // Court floor - polished wood look
+
+    // === PROFESSIONAL HARDWOOD COURT ===
+    // Main court floor - warm maple hardwood color
     const courtGeo = new THREE.PlaneGeometry(COURT_WIDTH, COURT_LENGTH);
     const courtMat = new THREE.MeshStandardMaterial({
-      color: 0xc4723e,
-      roughness: 0.88,
-      metalness: 0.0,
+      color: 0xd4944a,
+      roughness: 0.65,
+      metalness: 0.02,
     });
     const courtFloor = new THREE.Mesh(courtGeo, courtMat);
     courtFloor.rotation.x = -Math.PI / 2;
     courtFloor.receiveShadow = true;
     this.court.add(courtFloor);
 
-    // Wood grain stripes overlay
-    const stripeCount = 18;
-    for (let i = 0; i < stripeCount; i++) {
-      const sx = -COURT_WIDTH / 2 + (i + 0.5) * (COURT_WIDTH / stripeCount);
-      const stripeGeo = new THREE.PlaneGeometry(COURT_WIDTH / stripeCount * 0.7, COURT_LENGTH);
-      const stripeMat = new THREE.MeshBasicMaterial({
-        color: i % 2 === 0 ? 0xb86840 : 0xd4844c,
+    // Realistic wood plank stripes (alternating slightly different wood tones)
+    const plankCount = 28;
+    for (let i = 0; i < plankCount; i++) {
+      const sx = -COURT_WIDTH / 2 + (i + 0.5) * (COURT_WIDTH / plankCount);
+      const plankGeo = new THREE.PlaneGeometry(COURT_WIDTH / plankCount * 0.85, COURT_LENGTH);
+      const plankMat = new THREE.MeshBasicMaterial({
+        color: i % 2 === 0 ? 0xc8884a : 0xdaa060,
         transparent: true,
-        opacity: 0.15,
+        opacity: 0.18,
         side: THREE.DoubleSide,
         depthWrite: false,
       });
-      const stripe = new THREE.Mesh(stripeGeo, stripeMat);
-      stripe.rotation.x = -Math.PI / 2;
-      stripe.position.set(sx, 0.002, 0);
-      this.court.add(stripe);
+      const plank = new THREE.Mesh(plankGeo, plankMat);
+      plank.rotation.x = -Math.PI / 2;
+      plank.position.set(sx, 0.003, 0);
+      this.court.add(plank);
     }
 
-    // === RITUAL TEXT ON COURT ===
-    this.addCourtText('RITUAL', 0, 0.016, -1, 12, 1.6, '#ff8c00', 0.25);
-    this.addCourtText('HOOPS', 0, 0.016, 5.5, 7, 0.9, '#ff6b35', 0.15);
+    // === PAINT / KEY AREAS (colored rectangles near hoops) ===
+    const paintWidth = 4.9;
+    const paintLength = 5.8;
 
-    // === PLAYER SIDE INDICATORS ===
-    // Player's half (positive Z) - orange tint
-    const playerSideGeo = new THREE.PlaneGeometry(COURT_WIDTH, COURT_LENGTH / 2);
-    const playerSideMat = new THREE.MeshBasicMaterial({
-      color: 0xff8c00,
+    // Opponent's paint (-Z side) - subtle blue tint
+    const oppPaintGeo = new THREE.PlaneGeometry(paintWidth, paintLength);
+    const oppPaintMat = new THREE.MeshBasicMaterial({
+      color: 0x1a4a8a,
       transparent: true,
-      opacity: 0.07,
+      opacity: 0.35,
       side: THREE.DoubleSide,
+      depthWrite: false,
     });
-    const playerSidePlane = new THREE.Mesh(playerSideGeo, playerSideMat);
-    playerSidePlane.rotation.x = -Math.PI / 2;
-    playerSidePlane.position.set(0, 0.005, COURT_LENGTH / 4);
-    this.court.add(playerSidePlane);
+    const oppPaint = new THREE.Mesh(oppPaintGeo, oppPaintMat);
+    oppPaint.rotation.x = -Math.PI / 2;
+    oppPaint.position.set(0, 0.006, -COURT_LENGTH / 2 + paintLength / 2);
+    this.court.add(oppPaint);
 
-    // Opponent's half (negative Z) - cyan tint
-    const oppSideGeo = new THREE.PlaneGeometry(COURT_WIDTH, COURT_LENGTH / 2);
-    const oppSideMat = new THREE.MeshBasicMaterial({
-      color: 0x00e5ff,
+    // Player's paint (+Z side) - subtle orange/amber tint
+    const playerPaintGeo = new THREE.PlaneGeometry(paintWidth, paintLength);
+    const playerPaintMat = new THREE.MeshBasicMaterial({
+      color: 0xcc6622,
       transparent: true,
-      opacity: 0.07,
+      opacity: 0.30,
       side: THREE.DoubleSide,
+      depthWrite: false,
     });
-    const oppSidePlane = new THREE.Mesh(oppSideGeo, oppSideMat);
-    oppSidePlane.rotation.x = -Math.PI / 2;
-    oppSidePlane.position.set(0, 0.005, -COURT_LENGTH / 4);
-    this.court.add(oppSidePlane);
+    const playerPaint = new THREE.Mesh(playerPaintGeo, playerPaintMat);
+    playerPaint.rotation.x = -Math.PI / 2;
+    playerPaint.position.set(0, 0.006, COURT_LENGTH / 2 - paintLength / 2);
+    this.court.add(playerPaint);
 
-    // Direction arrow cone pointing toward player's hoop (+Z)
-    const arrowGeo = new THREE.ConeGeometry(0.3, 0.8, 8);
-    const arrowMat = new THREE.MeshStandardMaterial({
-      color: 0x00e5ff,
-      emissive: 0x00e5ff,
-      emissiveIntensity: 0.5,
-      roughness: 0.3,
-      metalness: 0.4,
-    });
-    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
-    arrow.rotation.x = -Math.PI / 2;
-    arrow.position.set(0, 0.5, 5);
-    arrow.name = 'directionArrow';
-    this.court.add(arrow);
+    // === RITUAL TEXT ON COURT (center) ===
+    this.addCourtText('RITUAL', 0, 0.016, -1, 12, 1.6, '#c87830', 0.20);
+    this.addCourtText('HOOPS', 0, 0.016, 5.5, 7, 0.9, '#b06020', 0.14);
 
-    // Court lines
-    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2, transparent: true, opacity: 0.9 });
-    
-    // Boundary
+    // === COURT LINES (white, clean) ===
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 });
+
+    // Boundary lines
     this.addCourtLine(this.court, [
-      [-COURT_WIDTH / 2, 0.01, -COURT_LENGTH / 2],
-      [COURT_WIDTH / 2, 0.01, -COURT_LENGTH / 2],
-      [COURT_WIDTH / 2, 0.01, COURT_LENGTH / 2],
-      [-COURT_WIDTH / 2, 0.01, COURT_LENGTH / 2],
-      [-COURT_WIDTH / 2, 0.01, -COURT_LENGTH / 2],
+      [-COURT_WIDTH / 2, 0.012, -COURT_LENGTH / 2],
+      [COURT_WIDTH / 2, 0.012, -COURT_LENGTH / 2],
+      [COURT_WIDTH / 2, 0.012, COURT_LENGTH / 2],
+      [-COURT_WIDTH / 2, 0.012, COURT_LENGTH / 2],
+      [-COURT_WIDTH / 2, 0.012, -COURT_LENGTH / 2],
     ], lineMat);
-    
+
     // Center line
     this.addCourtLine(this.court, [
-      [-COURT_WIDTH / 2, 0.01, 0],
-      [COURT_WIDTH / 2, 0.01, 0],
+      [-COURT_WIDTH / 2, 0.012, 0],
+      [COURT_WIDTH / 2, 0.012, 0],
     ], lineMat);
-    
-    // Center circle
-    this.addCourtCircle(this.court, 0, 0.01, 0, 1.8, 32, lineMat);
-    
-    // Three point lines (arcs)
+
+    // Center circle (larger, pro-size)
+    this.addCourtCircle(this.court, 0, 0.012, 0, 2.4, 48, lineMat);
+    // Small center circle
+    this.addCourtCircle(this.court, 0, 0.012, 0, 0.6, 24, lineMat);
+
+    // Three point arcs
     this.addThreePointLine(this.court, COURT_LENGTH / 2, 1);
     this.addThreePointLine(this.court, -COURT_LENGTH / 2, -1);
-    
-    // Free throw lanes
-    this.addCourtLine(this.court, [
-      [-2.45, 0.01, COURT_LENGTH / 2 - 5.8],
-      [-2.45, 0.01, COURT_LENGTH / 2],
-    ], lineMat);
-    this.addCourtLine(this.court, [
-      [2.45, 0.01, COURT_LENGTH / 2 - 5.8],
-      [2.45, 0.01, COURT_LENGTH / 2],
-    ], lineMat);
-    this.addCourtLine(this.court, [
-      [-2.45, 0.01, COURT_LENGTH / 2 - 5.8],
-      [2.45, 0.01, COURT_LENGTH / 2 - 5.8],
-    ], lineMat);
-    
-    this.addCourtLine(this.court, [
-      [-2.45, 0.01, -COURT_LENGTH / 2 + 5.8],
-      [-2.45, 0.01, -COURT_LENGTH / 2],
-    ], lineMat);
-    this.addCourtLine(this.court, [
-      [2.45, 0.01, -COURT_LENGTH / 2 + 5.8],
-      [2.45, 0.01, -COURT_LENGTH / 2],
-    ], lineMat);
-    this.addCourtLine(this.court, [
-      [-2.45, 0.01, -COURT_LENGTH / 2 + 5.8],
-      [2.45, 0.01, -COURT_LENGTH / 2 + 5.8],
-    ], lineMat);
-    
-    // Free throw circles
-    this.addCourtCircle(this.court, 0, 0.01, COURT_LENGTH / 2 - 5.8, 1.8, 32, lineMat);
-    this.addCourtCircle(this.court, 0, 0.01, -COURT_LENGTH / 2 + 5.8, 1.8, 32, lineMat);
-    
-    this.scene.add(this.court);
-    
-    // === CLEAR SIDE LABELS ===
-    const arrowGroup = new THREE.Group();
 
-    // YOUR HOOP - large glowing label
+    // Free throw lanes (key/paint outlines)
+    const keyW = 2.45;
+    const keyLen = 5.8;
+    // Player side (+Z)
+    this.addCourtLine(this.court, [
+      [-keyW, 0.012, COURT_LENGTH / 2 - keyLen],
+      [-keyW, 0.012, COURT_LENGTH / 2],
+      [keyW, 0.012, COURT_LENGTH / 2],
+      [keyW, 0.012, COURT_LENGTH / 2 - keyLen],
+    ], lineMat);
+    // Opponent side (-Z)
+    this.addCourtLine(this.court, [
+      [-keyW, 0.012, -COURT_LENGTH / 2 + keyLen],
+      [-keyW, 0.012, -COURT_LENGTH / 2],
+      [keyW, 0.012, -COURT_LENGTH / 2],
+      [keyW, 0.012, -COURT_LENGTH / 2 + keyLen],
+    ], lineMat);
+
+    // Free throw circles (dashed semicircles)
+    this.addCourtSemicircle(this.court, 0, 0.012, COURT_LENGTH / 2 - keyLen, 1.8, 32, -1, lineMat);
+    this.addCourtSemicircle(this.court, 0, 0.012, -COURT_LENGTH / 2 + keyLen, 1.8, 32, 1, lineMat);
+
+    // Restricted areas (small arcs under basket)
+    this.addCourtSemicircle(this.court, 0, 0.012, COURT_LENGTH / 2 - 1.22, 1.22, 24, -1, lineMat);
+    this.addCourtSemicircle(this.court, 0, 0.012, -COURT_LENGTH / 2 + 1.22, 1.22, 24, 1, lineMat);
+
+    this.scene.add(this.court);
+
+    // === HOOP DIRECTION LABELS (subtle, professional) ===
+    const labelGroup = new THREE.Group();
+
+    // YOUR HOOP label
     const yourCanvas = document.createElement('canvas');
     yourCanvas.width = 1024; yourCanvas.height = 256;
     const yourCtx = yourCanvas.getContext('2d')!;
-    yourCtx.shadowColor = '#00ffdd'; yourCtx.shadowBlur = 30;
-    yourCtx.fillStyle = '#00ffdd';
-    yourCtx.font = 'bold 140px Arial, sans-serif';
+    yourCtx.shadowColor = '#ff8844'; yourCtx.shadowBlur = 15;
+    yourCtx.fillStyle = '#ff8844';
+    yourCtx.font = 'bold 120px Arial, sans-serif';
     yourCtx.textAlign = 'center'; yourCtx.textBaseline = 'middle';
     yourCtx.fillText('YOUR HOOP', 512, 128);
     yourCtx.fillText('YOUR HOOP', 512, 128);
     const yourTexture = new THREE.CanvasTexture(yourCanvas);
     const yourLabel = new THREE.Mesh(
       new THREE.PlaneGeometry(8, 2),
-      new THREE.MeshBasicMaterial({ map: yourTexture, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false })
+      new THREE.MeshBasicMaterial({ map: yourTexture, transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false })
     );
     yourLabel.position.set(0, 0.03, 15); yourLabel.rotation.x = -Math.PI / 2;
-    arrowGroup.add(yourLabel);
-
-    // Arrow to YOUR HOOP
-    const yourArrC = document.createElement('canvas'); yourArrC.width = 256; yourArrC.height = 256;
-    const yourArrCtx = yourArrC.getContext('2d')!;
-    yourArrCtx.shadowColor = '#00ffdd'; yourArrCtx.shadowBlur = 20;
-    yourArrCtx.fillStyle = '#00ffdd';
-    yourArrCtx.font = 'bold 200px Arial'; yourArrCtx.textAlign = 'center'; yourArrCtx.textBaseline = 'middle';
-    yourArrCtx.fillText('\u25B2', 128, 128);
-    const yourArrTex = new THREE.CanvasTexture(yourArrC);
-    const yourArrMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(2, 2),
-      new THREE.MeshBasicMaterial({ map: yourArrTex, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false })
-    );
-    yourArrMesh.position.set(0, 0.03, 13); yourArrMesh.rotation.x = -Math.PI / 2;
-    arrowGroup.add(yourArrMesh);
+    labelGroup.add(yourLabel);
 
     // OPPONENT label
     const oppCanvas = document.createElement('canvas');
     oppCanvas.width = 1024; oppCanvas.height = 256;
     const oppCtx = oppCanvas.getContext('2d')!;
-    oppCtx.shadowColor = '#ff0066'; oppCtx.shadowBlur = 30;
-    oppCtx.fillStyle = '#ff0066';
-    oppCtx.font = 'bold 140px Arial, sans-serif';
+    oppCtx.shadowColor = '#ff4466'; oppCtx.shadowBlur = 15;
+    oppCtx.fillStyle = '#ff4466';
+    oppCtx.font = 'bold 120px Arial, sans-serif';
     oppCtx.textAlign = 'center'; oppCtx.textBaseline = 'middle';
     oppCtx.fillText('OPPONENT', 512, 128);
     oppCtx.fillText('OPPONENT', 512, 128);
     const oppTexture = new THREE.CanvasTexture(oppCanvas);
     const oppLabel = new THREE.Mesh(
       new THREE.PlaneGeometry(8, 2),
-      new THREE.MeshBasicMaterial({ map: oppTexture, transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false })
+      new THREE.MeshBasicMaterial({ map: oppTexture, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })
     );
     oppLabel.position.set(0, 0.03, -15); oppLabel.rotation.x = -Math.PI / 2;
-    arrowGroup.add(oppLabel);
+    labelGroup.add(oppLabel);
 
-    // Arrow to OPPONENT
-    const oppArrC = document.createElement('canvas'); oppArrC.width = 256; oppArrC.height = 256;
-    const oppArrCtx = oppArrC.getContext('2d')!;
-    oppArrCtx.shadowColor = '#ff0066'; oppArrCtx.shadowBlur = 20;
-    oppArrCtx.fillStyle = '#ff0066';
-    oppArrCtx.font = 'bold 200px Arial'; oppArrCtx.textAlign = 'center'; oppArrCtx.textBaseline = 'middle';
-    oppArrCtx.fillText('\u25BC', 128, 128);
-    const oppArrTex = new THREE.CanvasTexture(oppArrC);
-    const oppArrMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(2, 2),
-      new THREE.MeshBasicMaterial({ map: oppArrTex, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })
-    );
-    oppArrMesh.position.set(0, 0.03, -13); oppArrMesh.rotation.x = -Math.PI / 2;
-    arrowGroup.add(oppArrMesh);
-
-    // Colored edge strips
+    // Subtle baseline accent strips
     const pStrip = new THREE.Mesh(
-      new THREE.PlaneGeometry(COURT_WIDTH, 1.5),
-      new THREE.MeshBasicMaterial({ color: 0x00ffdd, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false })
+      new THREE.PlaneGeometry(COURT_WIDTH, 0.8),
+      new THREE.MeshBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.20, side: THREE.DoubleSide, depthWrite: false })
     );
-    pStrip.rotation.x = -Math.PI / 2; pStrip.position.set(0, 0.012, COURT_LENGTH / 2 - 0.75);
-    arrowGroup.add(pStrip);
+    pStrip.rotation.x = -Math.PI / 2; pStrip.position.set(0, 0.013, COURT_LENGTH / 2 - 0.4);
+    labelGroup.add(pStrip);
     const oStrip = new THREE.Mesh(
-      new THREE.PlaneGeometry(COURT_WIDTH, 1.5),
-      new THREE.MeshBasicMaterial({ color: 0xff0066, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false })
+      new THREE.PlaneGeometry(COURT_WIDTH, 0.8),
+      new THREE.MeshBasicMaterial({ color: 0xff4466, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false })
     );
-    oStrip.rotation.x = -Math.PI / 2; oStrip.position.set(0, 0.012, -COURT_LENGTH / 2 + 0.75);
-    arrowGroup.add(oStrip);
+    oStrip.rotation.x = -Math.PI / 2; oStrip.position.set(0, 0.013, -COURT_LENGTH / 2 + 0.4);
+    labelGroup.add(oStrip);
 
-    this.scene.add(arrowGroup);
+    this.scene.add(labelGroup);
+  }
+
+  // Semicircle (half circle for free throw area)
+  private addCourtSemicircle(parent: THREE.Group, cx: number, cy: number, cz: number, radius: number, segments: number, direction: number, material: THREE.LineBasicMaterial) {
+    const points: number[] = [];
+    const startAngle = direction > 0 ? -Math.PI / 2 : Math.PI / 2;
+    const endAngle = direction > 0 ? Math.PI / 2 : Math.PI * 1.5;
+    for (let i = 0; i <= segments; i++) {
+      const angle = startAngle + (i / segments) * Math.PI;
+      points.push(cx + Math.cos(angle) * radius, cy, cz + Math.sin(angle) * radius);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+    parent.add(new THREE.Line(geo, material));
   }
 
   private addCourtLine(parent: THREE.Group, points: number[][], material: THREE.LineBasicMaterial) {
@@ -692,8 +740,8 @@ export class GameEngine {
     rim.castShadow = true;
     hoop.add(rim);
     
-    // Hoop glow light
-    const hoopGlow = new THREE.PointLight(pos.z < 0 ? 0xff0066 : 0x00ffdd, 3, 6);
+    // Hoop area light (warm white, subtle)
+    const hoopGlow = new THREE.PointLight(0xffeedd, 2, 8);
     hoopGlow.position.set(0, HOOP_HEIGHT + 0.5, 0);
     hoop.add(hoopGlow);
 
@@ -966,34 +1014,45 @@ export class GameEngine {
   }
 
   private buildLights() {
-    // Ambient - very dim for moody atmosphere
-    this.ambientLight = new THREE.AmbientLight(0x222244, 0.6);
+    // Ambient - warm arena fill
+    this.ambientLight = new THREE.AmbientLight(0xffeedd, 0.5);
     this.scene.add(this.ambientLight);
     
-    // Main overhead spotlight (bright white)
-    const mainLight = new THREE.SpotLight(0xffffff, 80, 50, Math.PI / 3.5, 0.6, 1);
-    mainLight.position.set(0, 22, 0);
+    // Main overhead bank of lights (simulating arena catwalk lights)
+    const mainLight = new THREE.SpotLight(0xfff5e6, 100, 60, Math.PI / 3, 0.5, 0.8);
+    mainLight.position.set(0, 25, 0);
     mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 1024;
-    mainLight.shadow.mapSize.height = 1024;
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
     this.scene.add(mainLight);
     this.spotLights.push(mainLight);
     
-    // Punk-colored corner lights (pink, cyan, purple, green)
-    const punkLights = [
-      { color: 0xff0066, pos: [-12, 8, -12], target: [-4, 0, -8] },
-      { color: 0x00ffdd, pos: [12, 8, -12], target: [4, 0, -8] },
-      { color: 0xaa00ff, pos: [-12, 8, 12], target: [-4, 0, 8] },
-      { color: 0x00ff66, pos: [12, 8, 12], target: [4, 0, 8] },
+    // Secondary overhead lights (4 corners of court, warm white)
+    const arenaLights = [
+      { pos: [-10, 22, -15], tx: -3, tz: -8 },
+      { pos: [10, 22, -15], tx: 3, tz: -8 },
+      { pos: [-10, 22, 15], tx: -3, tz: 8 },
+      { pos: [10, 22, 15], tx: 3, tz: 8 },
     ];
     
-    punkLights.forEach(({ color, pos, target }) => {
-      const light = new THREE.SpotLight(color, 40, 40, Math.PI / 3, 0.7, 1.5);
-      light.position.set(...pos);
-      light.target.position.set(...target);
+    arenaLights.forEach(({ pos, tx, tz }) => {
+      const light = new THREE.SpotLight(0xfff0dd, 50, 45, Math.PI / 3.5, 0.6, 1.0);
+      light.position.set(pos[0], pos[1], pos[2]);
+      light.target.position.set(tx, 0, tz);
       this.scene.add(light);
       this.spotLights.push(light);
     });
+
+    // Hoop area lights (focused on baskets)
+    const hoopLight1 = new THREE.SpotLight(0xffffff, 30, 20, Math.PI / 5, 0.4, 1.0);
+    hoopLight1.position.set(0, 18, -COURT_LENGTH / 2 + 2);
+    hoopLight1.target.position.set(0, 3, -COURT_LENGTH / 2 + HOOP_OFFSET);
+    this.scene.add(hoopLight1);
+
+    const hoopLight2 = new THREE.SpotLight(0xffffff, 30, 20, Math.PI / 5, 0.4, 1.0);
+    hoopLight2.position.set(0, 18, COURT_LENGTH / 2 - 2);
+    hoopLight2.target.position.set(0, 3, COURT_LENGTH / 2 - HOOP_OFFSET);
+    this.scene.add(hoopLight2);
   }
 
   private buildParticleSystem() {
@@ -1032,10 +1091,19 @@ export class GameEngine {
 
   private initBGM() {
     try {
-      this.bgmAudio = new Audio('/bgm-nba.wav');
+      // Try NBA pop-style BGM first, fallback to original
+      this.bgmAudio = new Audio('/bgm-nba-pop.wav');
       this.bgmAudio.loop = true;
       this.bgmAudio.volume = this.bgmVolume;
-      this.bgmAudio.play().catch(() => {});
+      this.bgmAudio.play().catch(() => {
+        // Fallback to existing BGM
+        try {
+          this.bgmAudio = new Audio('/bgm-nba.mp3');
+          this.bgmAudio.loop = true;
+          this.bgmAudio.volume = this.bgmVolume;
+          this.bgmAudio.play().catch(() => {});
+        } catch {}
+      });
     } catch {}
   }
 
@@ -1220,10 +1288,14 @@ export class GameEngine {
     const dx = Math.abs(this.player.position.x - hoopPos.x);
     const dz = Math.abs(this.player.position.z - hoopPos.z);
     
-    if (dz < 7 && dx < 4) {
+    // Dunk bonus increases dunk range: base 7 + dunk * 0.3
+    const dunkRange = 7 + this.playerBonus.dunk * 0.3;
+    const dunkWidth = 4 + this.playerBonus.dunk * 0.15;
+    if (dz < dunkRange && dx < dunkWidth) {
       this.player.isDunking = true;
       this.player.isJumping = true;
-      this.player.jumpVelocity = JUMP_FORCE * 1.3;
+      // Dunk bonus also increases jump force for dunks
+      this.player.jumpVelocity = JUMP_FORCE * (1.3 + this.playerBonus.dunk * 0.015);
       this.onAction?.('dunk');
     }
   }
@@ -1235,10 +1307,12 @@ export class GameEngine {
     if (by === 'player' && this.hasBall === 'opponent') {
       const dist = this.player.position.distanceTo(this.opponent.position);
       if (dist < STEAL_RANGE) {
-        if (Math.random() < 0.55) {
+        // Defense bonus increases steal chance: base 55% + defense * 3%
+        const stealChance = 0.55 + this.playerBonus.defense * 0.03;
+        if (Math.random() < Math.min(stealChance, 0.92)) {
           this.hasBall = 'player';
           this.ball.owner = 'player';
-          this.stealCooldown = STEAL_COOLDOWN;
+          this.stealCooldown = STEAL_COOLDOWN * (1 - this.playerBonus.defense * 0.02);
           this.onSteal?.();
           this.onAction?.('steal');
           this.spawnParticles(this.opponent.position, 0x00ff88, 10);
@@ -1340,7 +1414,6 @@ export class GameEngine {
     this.ball.isAirborne = true;
     this.ball.owner = null;
     this.hasBall = 'none' as unknown as 'player' | 'opponent';
-    this.opponentAction = 'shooting';
     this.onAction?.('opponent_shot');
   }
 
@@ -1508,8 +1581,10 @@ export class GameEngine {
     const dz = this.ball.position.z - hL.position.z;
     const distXZ = Math.sqrt(dx * dx + dz * dz);
     
-    if (distXZ < hL.rimRadius * 1.2 && 
-        this.ball.position.y < hL.position.y + 0.5 &&
+    // Shoot bonus widens the scoring detection zone
+    const shootBonusMultiplier = 1.2 + this.playerBonus.shoot * 0.03;
+    if (distXZ < hL.rimRadius * shootBonusMultiplier && 
+        this.ball.position.y < hL.position.y + 0.5 + this.playerBonus.shoot * 0.02 &&
         this.ball.position.y > hL.position.y - 0.8 &&
         this.ball.velocity.y < 0.5) {
       // Score for player!
@@ -1794,15 +1869,6 @@ export class GameEngine {
     this.updateParticles(dt);
     this.updateContextHints();
     this.updateCamera();
-    
-    // Dynamic lighting
-    const time = this.clock.elapsedTime;
-    if (this.spotLights.length > 2) {
-      this.spotLights[1].intensity = 30 + Math.sin(time * 2) * 5;
-      this.spotLights[2].intensity = 30 + Math.sin(time * 2 + 1) * 5;
-      this.spotLights[3].intensity = 30 + Math.sin(time * 2 + 2) * 5;
-      this.spotLights[4].intensity = 30 + Math.sin(time * 2 + 3) * 5;
-    }
     
     // Render
     this.renderer.render(this.scene, this.camera);
