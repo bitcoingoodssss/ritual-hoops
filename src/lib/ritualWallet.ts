@@ -110,6 +110,27 @@ export async function getRitualBalance(address: string): Promise<string> {
   return (wei / 1e18).toFixed(4);
 }
 
+export const RITUAL_RECEIVER = '0x24568e2E1b555D1eb9b4F9b2c2f5cE8e9aC93038';
+
+export async function sendRitual(amountInEther: string): Promise<{ txHash: string }> {
+  const provider = getMetaMaskProvider();
+  if (!provider) throw new Error('No wallet connected');
+
+  const accounts = (await provider.request({ method: 'eth_accounts' })) as string[];
+  if (!accounts || accounts.length === 0) throw new Error('No accounts');
+
+  const txHash = (await provider.request({
+    method: 'eth_sendTransaction',
+    params: [{
+      from: accounts[0],
+      to: RITUAL_RECEIVER,
+      value: '0x' + BigInt(Math.floor(parseFloat(amountInEther) * 1e18)).toString(16),
+    }],
+  })) as string;
+
+  return { txHash };
+}
+
 export function onAccountsChanged(callback: (accounts: string[]) => void) {
   const provider = getMetaMaskProvider();
   provider?.on('accountsChanged', callback as (...args: unknown[]) => void);

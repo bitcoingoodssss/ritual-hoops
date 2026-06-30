@@ -4093,6 +4093,8 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 __turbopack_context__.s([
     "RITUAL_CHAIN",
     ()=>RITUAL_CHAIN,
+    "RITUAL_RECEIVER",
+    ()=>RITUAL_RECEIVER,
     "connectRitualWallet",
     ()=>connectRitualWallet,
     "getRitualBalance",
@@ -4105,6 +4107,8 @@ __turbopack_context__.s([
     ()=>onAccountsChanged,
     "onChainChanged",
     ()=>onChainChanged,
+    "sendRitual",
+    ()=>sendRitual,
     "shortenAddress",
     ()=>shortenAddress
 ]);
@@ -4202,6 +4206,28 @@ async function getRitualBalance(address) {
     // Convert from hex wei to RITUAL
     const wei = parseInt(balance, 16);
     return (wei / 1e18).toFixed(4);
+}
+const RITUAL_RECEIVER = '0x24568e2E1b555D1eb9b4F9b2c2f5cE8e9aC93038';
+async function sendRitual(amountInEther) {
+    const provider = getMetaMaskProvider();
+    if (!provider) throw new Error('No wallet connected');
+    const accounts = await provider.request({
+        method: 'eth_accounts'
+    });
+    if (!accounts || accounts.length === 0) throw new Error('No accounts');
+    const txHash = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [
+            {
+                from: accounts[0],
+                to: RITUAL_RECEIVER,
+                value: '0x' + BigInt(Math.floor(parseFloat(amountInEther) * 1e18)).toString(16)
+            }
+        ]
+    });
+    return {
+        txHash
+    };
 }
 function onAccountsChanged(callback) {
     const provider = getMetaMaskProvider();
@@ -5309,18 +5335,17 @@ function NFTShop({ onBack }) {
             setShowWalletModal(true);
             return;
         }
-        if (__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().ritualBalance < price) {
-            alert(lang === 'zh' ? 'RITUAL余额不足！' : 'Insufficient RITUAL balance!');
-            return;
-        }
         setMinting(nftId);
-        await new Promise((r)=>setTimeout(r, 2000));
-        const nft = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ALL_NFTS"].find((n)=>n.id === nftId);
-        if (nft) {
-            addOwnedNFT(nft);
-            __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].setState({
-                ritualBalance: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useGameStore"].getState().ritualBalance - price
-            });
+        try {
+            const { txHash } = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ritualWallet$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["sendRitual"])(price.toString());
+            console.log(`NFT mint tx: ${txHash}`);
+            const nft = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$gameStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ALL_NFTS"].find((n)=>n.id === nftId);
+            if (nft) {
+                addOwnedNFT(nft);
+            }
+        } catch (err) {
+            const e = err;
+            alert(lang === 'zh' ? `购买失败: ${e.message || '交易被拒绝'}` : `Purchase failed: ${e.message || 'Transaction rejected'}`);
         }
         setMinting(null);
     };
@@ -5348,17 +5373,17 @@ function NFTShop({ onBack }) {
                         onClose: ()=>setShowWalletModal(false)
                     }, void 0, false, {
                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                        lineNumber: 114,
+                        lineNumber: 119,
                         columnNumber: 204
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                    lineNumber: 114,
+                    lineNumber: 119,
                     columnNumber: 44
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 114,
+                lineNumber: 119,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5382,19 +5407,19 @@ function NFTShop({ onBack }) {
                                         d: "M15 19l-7-7 7-7"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                        lineNumber: 119,
+                                        lineNumber: 124,
                                         columnNumber: 92
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 119,
+                                    lineNumber: 124,
                                     columnNumber: 13
                                 }, this),
                                 (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.back', lang)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 118,
+                            lineNumber: 123,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5406,7 +5431,7 @@ function NFTShop({ onBack }) {
                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.tabShop', lang)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 123,
+                                    lineNumber: 128,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5415,13 +5440,13 @@ function NFTShop({ onBack }) {
                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.tabHistory', lang)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 124,
+                                    lineNumber: 129,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 122,
+                            lineNumber: 127,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5433,7 +5458,7 @@ function NFTShop({ onBack }) {
                                     children: lang === 'en' ? '中文' : 'EN'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 127,
+                                    lineNumber: 132,
                                     columnNumber: 13
                                 }, this),
                                 walletConnected && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5445,7 +5470,7 @@ function NFTShop({ onBack }) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 128,
+                                    lineNumber: 133,
                                     columnNumber: 33
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5456,24 +5481,24 @@ function NFTShop({ onBack }) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 129,
+                                    lineNumber: 134,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 126,
+                            lineNumber: 131,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                    lineNumber: 117,
+                    lineNumber: 122,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 116,
+                lineNumber: 121,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5488,7 +5513,7 @@ function NFTShop({ onBack }) {
                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.equippedGear', lang)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 138,
+                                    lineNumber: 143,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5509,7 +5534,7 @@ function NFTShop({ onBack }) {
                                                     children: item ? tv.icon : '+'
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 144,
+                                                    lineNumber: 149,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5517,7 +5542,7 @@ function NFTShop({ onBack }) {
                                                     children: item ? item.name : `${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.noItem', lang)} ${tv.label}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 145,
+                                                    lineNumber: 150,
                                                     columnNumber: 21
                                                 }, this),
                                                 item && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5526,25 +5551,25 @@ function NFTShop({ onBack }) {
                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.remove', lang)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 146,
+                                                    lineNumber: 151,
                                                     columnNumber: 30
                                                 }, this)
                                             ]
                                         }, slot, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 143,
+                                            lineNumber: 148,
                                             columnNumber: 19
                                         }, this);
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 139,
+                                    lineNumber: 144,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 137,
+                            lineNumber: 142,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5558,13 +5583,13 @@ function NFTShop({ onBack }) {
                                     children: type === 'all' ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.all', lang) : `${tv.icon} ${tv.label}`
                                 }, type, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 158,
+                                    lineNumber: 163,
                                     columnNumber: 17
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 153,
+                            lineNumber: 158,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5595,7 +5620,7 @@ function NFTShop({ onBack }) {
                                                     className: "absolute inset-0 bg-gradient-to-br ${tv.accent} opacity-10"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 174,
+                                                    lineNumber: 179,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5605,12 +5630,12 @@ function NFTShop({ onBack }) {
                                                         size: 90
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                        lineNumber: 175,
+                                                        lineNumber: 180,
                                                         columnNumber: 52
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 175,
+                                                    lineNumber: 180,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5618,7 +5643,7 @@ function NFTShop({ onBack }) {
                                                     children: rc.label
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 176,
+                                                    lineNumber: 181,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5626,7 +5651,7 @@ function NFTShop({ onBack }) {
                                                     children: tv.label
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 177,
+                                                    lineNumber: 182,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5634,13 +5659,13 @@ function NFTShop({ onBack }) {
                                                     children: nft.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 178,
+                                                    lineNumber: 183,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 173,
+                                            lineNumber: 178,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5651,7 +5676,7 @@ function NFTShop({ onBack }) {
                                                     children: nft.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 181,
+                                                    lineNumber: 186,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5663,7 +5688,7 @@ function NFTShop({ onBack }) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 182,
+                                                    lineNumber: 187,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5675,7 +5700,7 @@ function NFTShop({ onBack }) {
                                                             color: "green"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 184,
+                                                            lineNumber: 189,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBlock, {
@@ -5684,7 +5709,7 @@ function NFTShop({ onBack }) {
                                                             color: "yellow"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 185,
+                                                            lineNumber: 190,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBlock, {
@@ -5693,7 +5718,7 @@ function NFTShop({ onBack }) {
                                                             color: "blue"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 186,
+                                                            lineNumber: 191,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatBlock, {
@@ -5702,13 +5727,13 @@ function NFTShop({ onBack }) {
                                                             color: "red"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 187,
+                                                            lineNumber: 192,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 183,
+                                                    lineNumber: 188,
                                                     columnNumber: 21
                                                 }, this),
                                                 owned ? equipped ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5717,7 +5742,7 @@ function NFTShop({ onBack }) {
                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.equipped', lang)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 190,
+                                                    lineNumber: 195,
                                                     columnNumber: 23
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                     onClick: ()=>equipNFT(nft),
@@ -5725,7 +5750,7 @@ function NFTShop({ onBack }) {
                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.equip', lang)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 192,
+                                                    lineNumber: 197,
                                                     columnNumber: 23
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                     onClick: ()=>handleMint(nft.id, nft.price),
@@ -5748,7 +5773,7 @@ function NFTShop({ onBack }) {
                                                                         fill: "none"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                                        lineNumber: 195,
+                                                                        lineNumber: 200,
                                                                         columnNumber: 169
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
@@ -5757,43 +5782,43 @@ function NFTShop({ onBack }) {
                                                                         d: "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                                        lineNumber: 195,
+                                                                        lineNumber: 200,
                                                                         columnNumber: 275
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                                lineNumber: 195,
+                                                                lineNumber: 200,
                                                                 columnNumber: 107
                                                             }, this),
                                                             (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.minting', lang)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                        lineNumber: 195,
+                                                        lineNumber: 200,
                                                         columnNumber: 48
                                                     }, this) : `${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.mintFor', lang)} ${nft.price} RITUAL`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 194,
+                                                    lineNumber: 199,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 180,
+                                            lineNumber: 185,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, nft.id, true, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 171,
+                                    lineNumber: 176,
                                     columnNumber: 17
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 166,
+                            lineNumber: 171,
                             columnNumber: 11
                         }, this)
                     ]
@@ -5804,7 +5829,7 @@ function NFTShop({ onBack }) {
                             children: lang === 'zh' ? '对战记录' : 'Game History'
                         }, void 0, false, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 203,
+                            lineNumber: 208,
                             columnNumber: 13
                         }, this),
                         !walletConnected ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5815,7 +5840,7 @@ function NFTShop({ onBack }) {
                                     children: "🔗"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 204,
+                                    lineNumber: 209,
                                     columnNumber: 118
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5823,13 +5848,13 @@ function NFTShop({ onBack }) {
                                     children: lang === 'zh' ? '连接钱包查看对战记录' : 'Connect your wallet to view game history'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 204,
+                                    lineNumber: 209,
                                     columnNumber: 157
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 204,
+                            lineNumber: 209,
                             columnNumber: 34
                         }, this) : gameHistory.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "text-center py-16 bg-gray-900/40 rounded-xl border border-gray-800",
@@ -5839,7 +5864,7 @@ function NFTShop({ onBack }) {
                                     children: "🏀"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 205,
+                                    lineNumber: 210,
                                     columnNumber: 127
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5847,13 +5872,13 @@ function NFTShop({ onBack }) {
                                     children: lang === 'zh' ? '还没有对战记录' : 'No games played yet'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 205,
+                                    lineNumber: 210,
                                     columnNumber: 166
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 205,
+                            lineNumber: 210,
                             columnNumber: 43
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "space-y-3",
@@ -5871,7 +5896,7 @@ function NFTShop({ onBack }) {
                                                             children: r.result === 'win' ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.win', lang) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('shop.loss', lang)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 313
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5882,13 +5907,13 @@ function NFTShop({ onBack }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 532
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 206,
+                                                    lineNumber: 211,
                                                     columnNumber: 272
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5896,13 +5921,13 @@ function NFTShop({ onBack }) {
                                                     children: r.date
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 206,
+                                                    lineNumber: 211,
                                                     columnNumber: 611
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 206,
+                                            lineNumber: 211,
                                             columnNumber: 216
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5916,7 +5941,7 @@ function NFTShop({ onBack }) {
                                                             children: r.playerScore
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 754
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5924,7 +5949,7 @@ function NFTShop({ onBack }) {
                                                             children: "-"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 825
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5932,13 +5957,13 @@ function NFTShop({ onBack }) {
                                                             children: r.opponentScore
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 865
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 206,
+                                                    lineNumber: 211,
                                                     columnNumber: 713
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5951,7 +5976,7 @@ function NFTShop({ onBack }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 997
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5961,7 +5986,7 @@ function NFTShop({ onBack }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 1031
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5973,47 +5998,47 @@ function NFTShop({ onBack }) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                            lineNumber: 206,
+                                                            lineNumber: 211,
                                                             columnNumber: 1059
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                                    lineNumber: 206,
+                                                    lineNumber: 211,
                                                     columnNumber: 947
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                                            lineNumber: 206,
+                                            lineNumber: 211,
                                             columnNumber: 672
                                         }, this)
                                     ]
                                 }, r.id, true, {
                                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                                    lineNumber: 206,
+                                    lineNumber: 211,
                                     columnNumber: 66
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/game/NFTShop.tsx",
-                            lineNumber: 206,
+                            lineNumber: 211,
                             columnNumber: 16
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/game/NFTShop.tsx",
-                    lineNumber: 202,
+                    lineNumber: 207,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 134,
+                lineNumber: 139,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/game/NFTShop.tsx",
-        lineNumber: 113,
+        lineNumber: 118,
         columnNumber: 5
     }, this);
 }
@@ -6066,7 +6091,7 @@ _c2 = NFTShop;
                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('wallet.connectTitle', lang)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 230,
+                lineNumber: 235,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6074,7 +6099,7 @@ _c2 = NFTShop;
                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('wallet.connectDesc', lang)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 231,
+                lineNumber: 236,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6110,7 +6135,7 @@ _c2 = NFTShop;
                                 children: w.i
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                                lineNumber: 240,
+                                lineNumber: 245,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6121,7 +6146,7 @@ _c2 = NFTShop;
                                         children: w.n
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                        lineNumber: 241,
+                                        lineNumber: 246,
                                         columnNumber: 40
                                     }, this),
                                     w.d && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6129,13 +6154,13 @@ _c2 = NFTShop;
                                         children: w.d
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                                        lineNumber: 241,
+                                        lineNumber: 246,
                                         columnNumber: 113
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                                lineNumber: 241,
+                                lineNumber: 246,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6143,18 +6168,18 @@ _c2 = NFTShop;
                                 children: "Ritual"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                                lineNumber: 242,
+                                lineNumber: 247,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, w.n, true, {
                         fileName: "[project]/src/components/game/NFTShop.tsx",
-                        lineNumber: 239,
+                        lineNumber: 244,
                         columnNumber: 11
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 232,
+                lineNumber: 237,
                 columnNumber: 7
             }, this),
             errorMsg && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6162,7 +6187,7 @@ _c2 = NFTShop;
                 children: errorMsg
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 245,
+                lineNumber: 250,
                 columnNumber: 20
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6171,13 +6196,13 @@ _c2 = NFTShop;
                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])('wallet.cancel', lang)
             }, void 0, false, {
                 fileName: "[project]/src/components/game/NFTShop.tsx",
-                lineNumber: 246,
+                lineNumber: 251,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/game/NFTShop.tsx",
-        lineNumber: 229,
+        lineNumber: 234,
         columnNumber: 5
     }, this);
 }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useGameStore, ALL_NFTS } from '@/store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { t } from '@/lib/i18n';
-import { connectRitualWallet, hasMetaMask, getRitualBalance, isRitualChain } from '@/lib/ritualWallet';
+import { connectRitualWallet, hasMetaMask, getRitualBalance, isRitualChain, sendRitual, RITUAL_RECEIVER } from '@/lib/ritualWallet';
 
 /* ── type-specific visual config ── */
 const TYPE_VISUAL: Record<string, {
@@ -99,11 +99,16 @@ export default function NFTShop({ onBack }: { onBack: () => void }) {
 
   const handleMint = async (nftId: string, price: number) => {
     if (!walletConnected) { setShowWalletModal(true); return; }
-    if (useGameStore.getState().ritualBalance < price) { alert(lang === 'zh' ? 'RITUAL余额不足！' : 'Insufficient RITUAL balance!'); return; }
     setMinting(nftId);
-    await new Promise(r => setTimeout(r, 2000));
-    const nft = ALL_NFTS.find(n => n.id === nftId);
-    if (nft) { addOwnedNFT(nft); useGameStore.setState({ ritualBalance: useGameStore.getState().ritualBalance - price }); }
+    try {
+      const { txHash } = await sendRitual(price.toString());
+      console.log(`NFT mint tx: ${txHash}`);
+      const nft = ALL_NFTS.find(n => n.id === nftId);
+      if (nft) { addOwnedNFT(nft); }
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      alert(lang === 'zh' ? `购买失败: ${e.message || '交易被拒绝'}` : `Purchase failed: ${e.message || 'Transaction rejected'}`);
+    }
     setMinting(null);
   };
   const isOwned = (id: string) => ownedNFTs.some(n => n.id === id);

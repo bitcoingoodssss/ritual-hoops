@@ -21,3 +21,60 @@
 [01:16:19.633] Browser LOG     restart sse, about to listen
 [01:16:19.633] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
 [01:16:19.803] Browser LOG     open {"isTrusted":true}
+[01:24:06.466] Browser LOG     restart sse, about to listen
+[01:24:06.466] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:24:06.466] Browser LOG     open {"isTrusted":true}
+[01:30:03.503] Browser LOG     restart sse, about to listen
+[01:30:03.503] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:30:03.705] Browser LOG     open {"isTrusted":true}
+[01:35:03.503] Browser LOG     restart sse, about to listen
+[01:35:03.503] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:35:03.920] Browser LOG     open {"isTrusted":true}
+[01:40:03.491] Browser LOG     restart sse, about to listen
+[01:40:03.491] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:40:04.230] Browser LOG     error {"isTrusted":true}
+[01:40:04.231] Browser LOG     An error occurred: {"isTrusted":true}
+[01:40:06.231] Browser LOG     restart sse, about to listen
+[01:40:06.231] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:40:06.397] Browser LOG     error {"isTrusted":true}
+[01:40:06.397] Browser LOG     An error occurred: {"isTrusted":true}
+[01:40:08.397] Browser LOG     restart sse, about to listen
+[01:40:08.397] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:40:08.557] Browser LOG     error {"isTrusted":true}
+[01:40:08.557] Browser LOG     An error occurred: {"isTrusted":true}
+[01:40:10.560] Browser LOG     restart sse, about to listen
+[01:40:10.561] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:40:10.717] Browser LOG     error {"isTrusted":true}
+[01:40:10.717] Browser LOG     An error occurred: {"isTrusted":true}
+[01:40:12.719] Browser LOG     restart sse, about to listen
+[01:40:12.720] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:40:12.873] Browser LOG     error {"isTrusted":true}
+[01:40:12.873] Browser LOG     An error occurred: {"isTrusted":true}
+[01:40:14.873] Browser LOG     restart sse, about to listen
+[01:40:14.873] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:40:15.035] Browser LOG     error {"isTrusted":true}
+[01:40:15.035] Browser LOG     An error occurred: {"isTrusted":true}
+[01:40:17.032] Browser LOG     restart sse, about to listen
+[01:40:17.032] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:40:17.204] Browser LOG     error {"isTrusted":true}
+[01:40:17.204] Browser LOG     An error occurred: {"isTrusted":true}
+[01:40:19.209] Browser LOG     _request called sseError {"error":{"code":0,"message":"[object Event]","url":"https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info="},"logs":[]}
+[01:40:19.209] Browser LOG     setting id 1782789931758
+[01:40:19.209] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'miniProgram')
+[01:40:19.209] Browser ERROR   unhandledRejection: TypeError: Cannot read properties of undefined (reading 'miniProgram')
+[01:40:19.426] Server  WARN    ⚠ Cross origin request detected from preview-chat-7cd0e164-bef3-4c26-8c3e-547eca60d080.space-z.ai to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[01:45:17.052] Browser LOG     restart sse, about to listen
+[01:45:17.052] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:45:17.936] Browser LOG     error {"isTrusted":true}
+[01:45:17.936] Browser LOG     An error occurred: {"isTrusted":true}
+[01:45:19.951] Browser LOG     _request called sseError {"error":{"code":0,"message":"[object Event]","url":"https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info="},"logs":[]}
+[01:45:19.951] Browser LOG     setting id 1782790232019
+[01:45:19.951] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'miniProgram')
+[01:45:19.951] Browser ERROR   unhandledRejection: TypeError: Cannot read properties of undefined (reading 'miniProgram')
+[01:50:17.037] Browser LOG     restart sse, about to listen
+[01:50:17.037] Browser LOG     listen https://wallet.binance.com/tonbridge/bridge/events?client_id=e05addd1a53ab30174e4f367d83476cf0bd3b4879527e66d42422dd791c4a621&user_info=
+[01:50:17.528] Browser LOG     open {"isTrusted":true}
+[01:53:53.297] Server  LOG     ✓ Compiled in 76ms
+[01:53:57.949] Server  LOG     ✓ Compiled in 133ms
+[01:54:00.794] Server  LOG     ✓ Compiled in 140ms
